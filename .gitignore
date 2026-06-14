@@ -69,3 +69,7 @@ assets/tools/*.dll
 # temp artifacts
 __pycache__/
 *.pyc
+
+# v1.1-patch: PyInstaller spec 文件应入 git（打包配置代码）
+# 反向排除 *.spec 规则，覆盖 project_root/*.spec
+!*.spec

@@ -697,17 +697,19 @@ def _unify_docx_fonts(docx_path: str):
 # PDF 转 Excel（纯 pdfplumber 多参数优化提取）
 # ============================================================
 def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
-    """PDF转Excel（纯 pdfplumber 多参数优化提取）
+    """PDF转Excel（v1.1-patch：IR 中间结构 + wrap_text 统一写入）
 
     策略：
-    1. 对每一页，尝试多种 table_settings 参数组合
-    2. 按评分选最优提取结果（单元格填充率 + 行列结构 + 内容丰富度）
+    1. 对每一页，尝试多种 table_settings 参数组合（v1 保留）
+    2. 按评分选最优提取结果（v1.1-patch 加列稳定性）
     3. 每页独立处理，页码绝不混乱
-    4. 表格提取失败时，使用 word-level 文字回退
+    4. 表格提取失败时，使用 word-level 文字回退（v1.1-patch 返回 IR）
+    5. 统一通过 IR 中间结构 + write_cell 写入 Excel（v1.1-patch 新增）
     """
     try:
         import pdfplumber
-        import pandas as pd
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment
     except Exception as e:
         raise Exception(f"PDF转Excel功能依赖缺失: {type(e).__name__}: {e}")
 
@@ -729,23 +731,51 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
             all_sheets = _extract_text_fallback(input_path)
 
         if not all_sheets:
-            raise Exception("未检测到表格或可提取的内容")
+            raise Exception("PDF 未检测到可提取的表格或文字内容（v1.1-patch: 可能是扫描件或图片型 PDF）")
 
-        with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
-            for sheet_name, df in all_sheets:
-                df.to_excel(writer, sheet_name=sheet_name[:31], index=False)
-                ws = writer.sheets[sheet_name[:31]]
-                for col_idx, col in enumerate(ws.columns, 1):
+        # v1.1-patch：使用 openpyxl Workbook + write_cell 统一写入
+        # - wrap_text=True + vertical='top' 保留单元格内 \n
+        # - 列宽按 CJK 字符宽度修正
+        def write_cell(ws, r, c, value):
+            cell = ws.cell(row=r, column=c, value=value)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            return cell
+
+        wb = Workbook()
+        wb.remove(wb.active)  # 移除默认 sheet
+
+        for sheet_name, ir in all_sheets:
+            # ir 可能是 dict（v1.1-patch）或老式 DataFrame（兼容）
+            if isinstance(ir, dict) and "rows" in ir:
+                rows = ir["rows"]
+            elif hasattr(ir, 'values'):
+                rows = ir.values.tolist()
+            else:
+                rows = ir
+
+            ws = wb.create_sheet(sheet_name[:31])
+            for i, row in enumerate(rows, 1):
+                for j, val in enumerate(row, 1):
+                    write_cell(ws, i, j, val)
+
+            # 列宽估算（保留 v1 的 CJK 系数）
+            if rows:
+                max_cols = max((len(r) for r in rows), default=0)
+                for col_idx in range(1, max_cols + 1):
+                    col_letter = ws.cell(row=1, column=col_idx).column_letter
                     max_len = 0
-                    for cell in col:
+                    for r_idx in range(1, len(rows) + 1):
                         try:
-                            val = str(cell.value) if cell.value else ""
+                            v = ws.cell(row=r_idx, column=col_idx).value
+                            val = str(v) if v else ""
                             cjk = sum(1 for c in val if '\u4e00' <= c <= '\u9fff')
                             cell_len = len(val) + cjk
                             max_len = max(max_len, cell_len)
                         except Exception:
                             pass
-                    ws.column_dimensions[ws.cell(row=1, column=col_idx).column_letter].width = min(max_len + 4, 50)
+                    ws.column_dimensions[col_letter].width = min(max(max_len + 4, 8), 50)
+
+        wb.save(output_path)
 
         return {
             "status": "ok",
@@ -888,10 +918,22 @@ def _extract_page_best(page, page_num: int) -> list:
             selected.append(candidate)
             used_dfs.append(candidate["df"])
 
+    # v1.1-patch：在输出边界把 DataFrame 包装成 IR dict
+    # 保留内部 DataFrame 流程以维持评分/去重的稳定性
+    from src.common.pdf_table_ir import to_table_block
     result = []
     for idx, item in enumerate(selected, 1):
         sheet_name = f"第{page_num}页_表{idx}"
-        result.append((sheet_name, item["df"]))
+        df = item["df"]
+        rows = df.values.tolist() if hasattr(df, 'values') else df
+        ir = to_table_block(
+            rows=rows,
+            page=page_num,
+            table_id=idx,
+            confidence=item.get("score", 1.0),
+            mode="structured",
+        )
+        result.append((sheet_name, ir))
 
     return result
 
@@ -941,8 +983,34 @@ def _extract_page_words(page) -> list:
     return result
 
 
+def _column_stability_score(cols) -> float:
+    """列宽稳定性评分（v1.1-patch）：列内字符长度方差小 → 列结构稳定 → 评分高
+
+    用途：减弱"参数组合扫描中偶然生成均齐假表"对评分的干扰
+
+    返回 0.0 ~ 0.1（最大贡献 0.1）
+    """
+    try:
+        import statistics
+    except ImportError:
+        return 0.0
+
+    lengths = [len(str(c)) for c in cols if c is not None and str(c).strip()]
+    if not lengths:
+        return 0.0
+
+    max_len = max(lengths)
+    if max_len == 0:
+        return 0.0
+
+    pstdev = statistics.pstdev(lengths)
+    # 1 - (标准差 / (max+1))：max+1 防 0 除；值越大表示列越稳定
+    stability = 1.0 - (pstdev / (max_len + 1))
+    return max(0.0, min(stability, 1.0)) * 0.1
+
+
 def _score_table(df) -> float:
-    """给表格打分：单元格填充率 + 行列结构 + 内容丰富度"""
+    """给表格打分：单元格填充率 + 行列结构 + 内容丰富度 + 列稳定性（v1.1-patch）"""
     if df.empty:
         return 0.0
 
@@ -967,7 +1035,16 @@ def _score_table(df) -> float:
     avg_chars = total_chars / max(non_empty, 1)
     content_score = min(avg_chars / 5.0, 1.0) * 0.2
 
-    score = fill_rate * 0.4 + col_score + row_score + content_score
+    # v1.1-patch：列稳定性评分（每列累加，最多贡献 0.1 * 5 = 0.5）
+    col_stability_total = 0.0
+    col_count = 0
+    for col in df.columns:
+        col_stability_total += _column_stability_score(df[col].tolist())
+        col_count += 1
+    # 归一化：按列数取平均，单表最大贡献 0.1
+    col_stability_score = (col_stability_total / col_count) if col_count > 0 else 0.0
+
+    score = fill_rate * 0.4 + col_score + row_score + content_score + col_stability_score
 
     return round(score, 4)
 
@@ -989,9 +1066,13 @@ def _table_to_dataframe(cleaned_table) -> "pd.DataFrame":
 
 
 def _extract_text_fallback(input_path: str) -> list:
-    """纯文字回退提取：当所有参数组合都无法识别表格时"""
+    """纯文字回退提取（v1.1-patch）：当所有参数组合都无法识别表格时
+
+    返回：[(sheet_name, ir_dict), ...]
+    ir_dict["meta"]["mode"] = "text_fallback"，与 structured 表格区分
+    """
     import pdfplumber
-    import pandas as pd
+    from src.common.pdf_table_ir import to_table_block
 
     results = []
 
@@ -1000,18 +1081,37 @@ def _extract_text_fallback(input_path: str) -> list:
             for page_num, page in enumerate(pdf.pages, 1):
                 page_words = _extract_page_words(page)
                 if page_words:
-                    df = pd.DataFrame(page_words)
-                    sheet_name = f"第{page_num}页_文字"
-                    results.append((sheet_name, df))
+                    # 把 page_words（list of dict）转回二维 rows
+                    if page_words:
+                        max_cols = max(len(d) for d in page_words)
+                        # 统一列名
+                        headers = list(page_words[0].keys())
+                        rows = []
+                        for d in page_words:
+                            rows.append([d.get(h, "") for h in headers])
+                        ir = to_table_block(
+                            rows=rows,
+                            page=page_num,
+                            table_id=1,
+                            mode="text_fallback",
+                        )
+                        sheet_name = f"第{page_num}页_文字"
+                        results.append((sheet_name, ir))
                     continue
 
                 text = page.extract_text()
                 if text and text.strip():
                     lines = [line.strip() for line in text.strip().split("\n") if line.strip()]
                     if lines:
-                        df = pd.DataFrame({"内容": lines})
+                        rows = [[line] for line in lines]
+                        ir = to_table_block(
+                            rows=rows,
+                            page=page_num,
+                            table_id=1,
+                            mode="text_fallback",
+                        )
                         sheet_name = f"第{page_num}页_文字"
-                        results.append((sheet_name, df))
+                        results.append((sheet_name, ir))
     except Exception:
         pass
 
@@ -1019,7 +1119,7 @@ def _extract_text_fallback(input_path: str) -> list:
 
 
 def _clean_table_data(table):
-    """清洗表格数据：去除 None、合并空行"""
+    """清洗表格数据：去除 None、合并空行、保留 \\n（v1.1-patch: 单元格换行不再被替换为空格）"""
     cleaned = []
     for row in table:
         cleaned_row = []
@@ -1028,7 +1128,9 @@ def _clean_table_data(table):
                 cleaned_row.append("")
             else:
                 text = str(cell).strip()
-                text = text.replace('\n', ' ').replace('\r', '')
+                # v1.1-patch 修复：仅去 \r，保留 \n
+                # 由下游 write_cell 配合 wrap_text=True 实现单元格内换行渲染
+                text = text.replace("\r", "")
                 cleaned_row.append(text)
         cleaned.append(cleaned_row)
 

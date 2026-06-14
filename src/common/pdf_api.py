@@ -51,6 +51,37 @@ def get_output_path(input_path: str, suffix: str, output_dir: str = None) -> str
     folder = os.path.dirname(input_path)
     return os.path.join(folder, f"{base}_{suffix}")
 
+
+def _resolve_output_path(output_path, input_path, default_ext):
+    """v1.1-patch 路径鲁棒性：把 output_path 规范成"完整文件路径"。
+
+    历史 BUG：当用户传入"目录路径"（如 "C:/Users/24785/Desktop\\"）时，
+    直接 += ".xlsx" 会得到 "C:/Users/24785/Desktop\\.xlsx"，
+    wb.save() 在 Windows 上失败报 [Errno 13] Permission denied。
+
+    本函数：
+    1. 如果 output_path 是已存在目录（或末尾带 / \\），则当作 output_dir，
+       在其下生成 <input_basename>.<ext>
+    2. 否则保证以 <ext> 结尾
+    3. 确保父目录存在（必要时创建）
+    """
+    if output_path is None:
+        output_path = get_output_path(input_path, "")
+        if default_ext and default_ext != ".pdf":
+            output_path = output_path.replace(".pdf", default_ext)
+    # 检测目录：末尾分隔符 或 路径已存在且是目录
+    elif output_path.endswith(("/", "\\")) or os.path.isdir(output_path):
+        base = os.path.splitext(os.path.basename(input_path))[0]
+        output_path = os.path.join(output_path, f"{base}{default_ext}")
+    # 补后缀
+    if not output_path.lower().endswith(default_ext.lower()):
+        output_path += default_ext
+    # 父目录兜底
+    parent = os.path.dirname(output_path)
+    if parent and not os.path.isdir(parent):
+        os.makedirs(parent, exist_ok=True)
+    return output_path
+
 # ============================================================
 # PDF 信息读取
 # ============================================================
@@ -620,8 +651,7 @@ def pdf_to_word(input_path: str, output_path: str = None) -> dict:
         if output_path is None:
             output_path = get_output_path(input_path, "")
             output_path = output_path.replace(".pdf", ".docx")
-        if not output_path.lower().endswith(".docx"):
-            output_path += ".docx"
+        output_path = _resolve_output_path(output_path, input_path, ".docx")
 
         cv = Converter(input_path)
         cv.convert(output_path, start=0, end=None)
@@ -705,6 +735,12 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
     3. 每页独立处理，页码绝不混乱
     4. 表格提取失败时，使用 word-level 文字回退（v1.1-patch 返回 IR）
     5. 统一通过 IR 中间结构 + write_cell 写入 Excel（v1.1-patch 新增）
+
+    参数：
+    - input_path: 输入 PDF 路径
+    - output_path: 输出 xlsx 路径，支持两种形式：
+        * 完整文件路径（推荐）：如 D:/out/foo.xlsx
+        * 输出目录：如是已存在目录，会在目录下生成 <input_basename>.xlsx
     """
     try:
         import pdfplumber
@@ -715,11 +751,7 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
         raise Exception(f"PDF转Excel功能依赖缺失: {type(e).__name__}: {e}")
 
     try:
-        if output_path is None:
-            output_path = get_output_path(input_path, "")
-            output_path = output_path.replace(".pdf", ".xlsx")
-        if not output_path.lower().endswith(".xlsx"):
-            output_path += ".xlsx"
+        output_path = _resolve_output_path(output_path, input_path, ".xlsx")
 
         all_sheets = []
 

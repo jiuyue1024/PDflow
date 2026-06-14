@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MergePage</class>
+ <widget class="QWidget" name="MergePage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>820</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>1280</width>
+    <height>820</height>
+   </size>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#MergePage {
+    background-color: #0B0E11;
+}
+
+/* ===== 主要按钮样式 ===== */
+QPushButton#btnAddPdf, QPushButton#btnMergePdf {
+    background-color: #4D7CFE;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 20px;
+}
+
+QPushButton#btnAddPdf:hover, QPushButton#btnMergePdf:hover {
+    background-color: #3D6CF0;
+}
+
+QPushButton#btnAddPdf:pressed, QPushButton#btnMergePdf:pressed {
+    background-color: #3560E0;
+}
+
+/* ===== 文字按钮样式（清空全部） ===== */
+QPushButton#btnClearAll {
+    background-color: transparent;
+    color: #848E9C;
+    border: none;
+    border-radius: 8px;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 14px;
+    padding: 8px 16px;
+}
+
+QPushButton#btnClearAll:hover {
+    color: #EAECEF;
+}
+
+/* ===== 次要按钮样式（合并/拆分） ===== */
+QPushButton#btnMerge, QPushButton#btnSplit {
+    background-color: #1E2329;
+    color: #EAECEF;
+    border: 1px solid #2B3139;
+    border-radius: 8px;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 14px;
+    padding: 6px 20px;
+}
+
+QPushButton#btnMerge:hover, QPushButton#btnSplit:hover {
+    background-color: #282D35;
+    border-color: #3D4450;
+}
+
+/* ===== 文件列表样式 ===== */
+QListWidget#fileListWidget {
+    background-color: #1A1A22;
+    border: 1px solid #2B3139;
+    border-radius: 8px;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 14px;
+    color: #EAECEF;
+    outline: none;
+    padding: 4px;
+}
+
+QListWidget#fileListWidget::item {
+    height: 44px;
+    border-radius: 6px;
+    padding: 0px 12px;
+    color: #EAECEF;
+}
+
+QListWidget#fileListWidget::item:hover {
+    background-color: #1E2329;
+}
+
+QListWidget#fileListWidget::item:selected {
+    background-color: #2A3040;
+    color: #FFFFFF;
+}
+
+/* ===== 状态标签 ===== */
+QLabel#lblFileCount {
+    color: #848E9C;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 13px;
+}
+
+QLabel#lblHint {
+    color: #848E9C;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 13px;
+}</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>16</number>
+   </property>
+   <property name="leftMargin">
+    <number>24</number>
+   </property>
+   <property name="topMargin">
+    <number>20</number>
+   </property>
+   <property name="rightMargin">
+    <number>24</number>
+   </property>
+   <property name="bottomMargin">
+    <number>20</number>
+   </property>
+   <item>
+    <layout class="QHBoxLayout" name="topBarLayout">
+     <property name="spacing">
+      <number>16</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="btnAddPdf">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>添加PDF文件</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnClearAll">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>清空全部</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="lblFileCount">
+       <property name="text">
+        <string>已添加 0 个文件</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="topBarSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QListWidget" name="fileListWidget"/>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="mergeSplitLayout">
+     <property name="spacing">
+      <number>16</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="btnMerge">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>合并</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnSplit">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>拆分</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="mergeSplitSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="bottomLayout">
+     <property name="spacing">
+      <number>12</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="lblHint">
+       <property name="text">
+        <string>选择至少2个PDF文件，合并为一个PDF文件</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnMergePdf">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>合并为单个PDF</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

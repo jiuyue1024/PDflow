@@ -1,0 +1,15 @@
+[
+  {
+    "id": "professional_default",
+    "name": "默认专业风",
+    "description": "深蓝装饰条 + 白底 + 斑马纹表格，专业技术文档",
+    "preview_color": "#3355AA",
+    "values": {
+      "theme_color": "#3355AA",
+      "header_style": "bar",
+      "bg_style": "white",
+      "bg_custom_color": "",
+      "table_style": "striped"
+    }
+  }
+]

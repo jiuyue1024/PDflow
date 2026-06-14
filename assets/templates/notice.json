@@ -1,0 +1,69 @@
+{
+  "id": "notice",
+  "name": "单页公告",
+  "icon": "📋",
+  "description": "A4 单页公告排版模板，适合通知、启事等场景",
+  "type": "办公文档",
+  "version": "2.0",
+  "fields": [
+    {"key": "title", "label": "公告标题", "type": "text", "required": true, "maxLength": 50, "placeholder": "如：关于五一劳动节放假安排的通知"},
+    {"key": "date", "label": "发布日期", "type": "text", "required": true, "maxLength": 20, "placeholder": "如：2026年5月11日"},
+    {"key": "body", "label": "公告正文", "type": "textarea", "required": true, "placeholder": "请输入公告正文内容..."},
+    {"key": "issuer", "label": "发布单位", "type": "text", "required": true, "maxLength": 40, "placeholder": "如：人力资源部"}
+  ],
+  "style_options": {
+    "theme_color": {
+      "label": "主题色",
+      "type": "color_preset",
+      "default": "#2C3E6B",
+      "options": [
+        {"name": "正式蓝", "value": "#2C3E6B"},
+        {"name": "科技蓝", "value": "#4D7CFE"},
+        {"name": "活力红", "value": "#FF3B30"},
+        {"name": "森林绿", "value": "#34C759"},
+        {"name": "深邃紫", "value": "#AF52DE"},
+        {"name": "暖阳橙", "value": "#FF9500"},
+        {"name": "高级黑", "value": "#1D1D1F"},
+        {"name": "海洋青", "value": "#5AC8FA"},
+        {"name": "玫瑰金", "value": "#B76E79"}
+      ]
+    },
+    "bar_position": {
+      "label": "装饰条位置",
+      "type": "radio",
+      "default": "top",
+      "options": [
+        {"name": "顶部", "value": "top"},
+        {"name": "底部", "value": "bottom"},
+        {"name": "左侧竖条", "value": "left"},
+        {"name": "无", "value": "none"}
+      ]
+    },
+    "bg_style": {
+      "label": "背景样式",
+      "type": "radio",
+      "default": "white",
+      "options": [
+        {"name": "纯白", "value": "white"},
+        {"name": "浅灰", "value": "light_gray"},
+        {"name": "浅蓝", "value": "light_blue"},
+        {"name": "渐变（上→下）", "value": "gradient_vertical"}
+      ]
+    },
+    "bg_custom_color": {
+      "label": "自定义背景色",
+      "type": "color",
+      "default": ""
+    },
+    "font_style": {
+      "label": "字体风格",
+      "type": "radio",
+      "default": "formal",
+      "options": [
+        {"name": "正式公文", "value": "formal"},
+        {"name": "简约现代", "value": "modern"},
+        {"name": "醒目强调", "value": "bold"}
+      ]
+    }
+  }
+}

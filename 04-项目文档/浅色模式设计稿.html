@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>印流PDflow — 浅色模式全页面设计稿</title>
+<style>
+  /* ===== 浅色模式色值系统 ===== */
+  :root {
+    --bg: #F5F5F7;
+    --sidebar-bg: #EEEEF0;
+    --card-bg: #FFFFFF;
+    --card-hover: #E8E8EC;
+    --border: #E5E5EA;
+    --separator: #D1D1D6;
+
+    --text-main: #1D1D1F;
+    --text-sub: #6E6E73;
+    --text-muted: #8B8D98;
+    --text-placeholder: #AEAEB2;
+
+    --primary: #4D7CFE;
+    --primary-hover: #3D6CF0;
+    --primary-pressed: #2D5CD0;
+    --primary-light-04: rgba(77,124,254,0.04);
+    --primary-light-06: rgba(77,124,254,0.06);
+    --primary-light-08: rgba(77,124,254,0.08);
+    --primary-light-10: rgba(77,124,254,0.10);
+    --primary-light-12: rgba(77,124,254,0.12);
+    --primary-light-15: rgba(77,124,254,0.15);
+
+    --success: #34C759;
+    --warning: #FF9500;
+    --error: #FF3B30;
+
+    --sidebar-icon: #6E6E73;
+    --sidebar-icon-active: #4D7CFE;
+
+    --nav-hover: rgba(0,0,0,0.04);
+    --nav-checked-bg: rgba(77,124,254,0.08);
+
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+    --shadow-md: 0 8px 32px rgba(0,0,0,0.06);
+    --shadow-card: 0 4px 24px rgba(0,0,0,0.04);
+    --shadow-elevated: 0 12px 48px rgba(0,0,0,0.08);
+
+    --title-bg: #EEEEF0;
+
+    --scrollbar-track: transparent;
+    --scrollbar-thumb: #D1D1D6;
+    --scrollbar-thumb-hover: #AEAEB2;
+
+    /* 首页毛玻璃效果（浅色版） */
+    --glass-bg: rgba(255,255,255,0.85);
+    --glass-border: rgba(0,0,0,0.06);
+    --glass-hover: #FFFFFF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text-main);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ===== 自定义标题栏 ===== */
+  .title-bar {
+    height: 40px;
+    background: var(--title-bg);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .title-bar .hint {
+    flex: 1;
+    padding-left: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .title-btn {
+    width: 46px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-sub);
+    font-size: 14px;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .title-btn:hover { background: var(--card-hover); color: var(--text-main); }
+  .title-btn.close:hover { background: var(--error); color: #fff; }
+
+  /* ===== 主布局 ===== */
+  .app-container {
+    display: flex;
+    height: calc(100vh - 40px);
+    width: 100vw;
+  }
+
+  /* ===== 侧边栏 ===== */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* 侧边栏右侧渐变分割线 */
+  .sidebar::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 10%;
+    height: 80%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(77,124,254,0.25), transparent);
+    pointer-events: none;
+  }
+
+  .brand {
+    padding: 28px 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .brand-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--primary), #6B9AFE);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    box-shadow: 0 2px 12px rgba(77,124,254,0.3);
+    flex-shrink: 0;
+  }
+  .brand-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-main);
+    letter-spacing: 0.5px;
+  }
+
+  /* 导航区域 */
+  .nav-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 10px;
+  }
+
+  .nav-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 0 0 10px;
+    min-height: 44px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    position: relative;
+  }
+  .nav-row:hover { background: var(--nav-hover); }
+  .nav-row.active { background: var(--nav-checked-bg); }
+
+  /* 左侧蓝色指示条（独立元素） */
+  .nav-indicator {
+    width: 3px;
+    height: 20px;
+    border-radius: 0 2px 2px 0;
+    flex-shrink: 0;
+    background: transparent;
+    transition: all 0.15s ease;
+  }
+  .nav-row.active .nav-indicator {
+    background: var(--primary);
+    box-shadow: 0 0 8px rgba(77,124,254,0.3);
+  }
+
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--sidebar-icon);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .nav-row.active .nav-icon { color: var(--primary); }
+
+  .nav-label {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-sub);
+    padding: 0 12px;
+  }
+  .nav-row.active .nav-label { color: var(--text-main); font-weight: 600; }
+
+  .nav-badge {
+    font-size: 10px;
+    background: var(--primary-light-15);
+    color: var(--primary);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+    margin-right: 8px;
+  }
+
+  /* 底部：设置按钮 */
+  .sidebar-footer {
+    padding: 16px 10px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sidebar-footer .nav-row { margin: 0; }
+
+  /* ===== 内容区 ===== */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--bg);
+  }
+
+  .content::-webkit-scrollbar { width: 6px; }
+  .content::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+  .content::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+  .content::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+  .content-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 48px 56px;
+  }
+
+  /* ===== 页面切换 ===== */
+  .page-section { display: none; }
+  .page-section.active { display: block; }
+
+  /* ================================================================ */
+  /* ===== 首页样式（完全匹配深色模式首页布局） ===== */
+  /* ================================================================ */
+
+  /* ── 品牌区 ── */
+  .hero-section {
+    margin-bottom: 56px;
+    position: relative;
+  }
+  /* 装饰性光晕（浅色版减淡） */
+  .hero-section::before {
+    content: '';
+    position: absolute;
+    top: -120px;
+    left: -80px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(77,124,254,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-section::after {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -40px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(77,124,254,0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .hero-title-group {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .hero-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+  .hero-title .accent-char {
+    color: var(--primary);
+    position: relative;
+  }
+  .hero-title .accent-char::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 2px;
+    opacity: 0.3;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-light-08);
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(77,124,254,0.15);
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+  .hero-badge .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .hero-subtitle {
+    font-size: 14px;
+    color: var(--text-sub);
+    font-weight: 400;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+  }
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-number {
+    font-family: 'SF Mono', 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.3px;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── 功能卡片区 ── */
+  .cards-section {
+    margin-bottom: 40px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .section-title-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-sub);
+    letter-spacing: 0.3px;
+  }
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  /* ── 功能卡片（浅色版轻质玻璃） ── */
+  .func-card {
+    position: relative;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 28px 24px 24px;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+  .func-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(77,124,254,0.03) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+  .func-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 14px;
+    background: var(--primary);
+    border-radius: 0 0 2px 0;
+    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 0 6px rgba(77,124,254,0.3);
+  }
+  .func-card:hover {
+    background: var(--card-bg);
+    border-color: rgba(77,124,254,0.25);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-elevated);
+  }
+  .func-card:hover::before { opacity: 1; }
+  .func-card:hover::after { height: 24px; }
+
+  .func-card .card-glow {
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(77,124,254,0.04) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+  .func-card:hover .card-glow { opacity: 1; }
+
+  .func-card .card-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+    position: relative;
+    transition: transform 0.35s ease;
+  }
+  .func-card:hover .card-icon-wrap { transform: scale(1.05); }
+  .func-card .card-icon-bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(77,124,254,0.10), rgba(77,124,254,0.03));
+    border: 1px solid rgba(77,124,254,0.10);
+  }
+  .func-card .card-icon {
+    position: relative;
+    z-index: 1;
+    width: 24px;
+    height: 24px;
+    color: var(--primary);
+  }
+  .func-card .card-icon svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .func-card .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 6px;
+    letter-spacing: 0.2px;
+  }
+  .func-card .card-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  /* ── 渐变分割线 ── */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .section-divider .line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+  .section-divider .line-accent {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(to right, var(--primary), rgba(77,124,254,0.2));
+  }
+
+  /* ── 最近使用文件 ── */
+  .recent-section {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow-card);
+  }
+  .recent-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .recent-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-sub);
+  }
+  .recent-title .title-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.6;
+    color: var(--text-sub);
+  }
+  .recent-title .title-icon svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .recent-clear {
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s;
+    background: none;
+    border: none;
+    font-family: inherit;
+  }
+  .recent-clear:hover { color: var(--text-sub); }
+
+  .file-list { display: flex; flex-direction: column; gap: 2px; }
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .file-item:hover { background: var(--nav-hover); }
+  .file-item .file-icon-pdf {
+    width: 32px;
+    height: 40px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    background: rgba(77,124,254,0.08);
+    border: 1px solid rgba(77,124,254,0.10);
+    font-family: 'SF Mono', 'Consolas', monospace;
+  }
+  .file-item .file-icon-pdf.red {
+    color: var(--error);
+    background: rgba(255,59,48,0.08);
+    border-color: rgba(255,59,48,0.10);
+  }
+  .file-item .file-info { flex: 1; min-width: 0; }
+  .file-item .file-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .file-item .file-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .file-item .file-status {
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--nav-hover);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .file-item .file-action {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+  }
+  .file-item:hover .file-action { opacity: 0.6; }
+  .file-item .file-action:hover { opacity: 1; background: var(--nav-hover); color: var(--text-main); }
+
+  /* ================================================================ */
+  /* ===== 通用区块样式 ===== */
+  /* ================================================================ */
+
+  .page-indicator {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .page-indicator .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+
+  .section-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+  .section-card.no-pad { padding: 0; overflow: hidden; }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* 按钮 */
+  .btn {
+    height: 36px; padding: 0 16px; border-radius: 8px; font-size: 14px; font-weight: 500;
+    border: none; cursor: pointer; display: inline-flex; align-items: center;
+    justify-content: center; transition: all 0.15s ease; font-family: inherit; gap: 6px;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-secondary { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+  .btn-secondary:hover { background: var(--primary-light-10); }
+  .btn-danger { background: var(--error); color: #fff; }
+  .btn-ghost { background: transparent; color: var(--primary); }
+  .btn-ghost:hover { background: var(--primary-light-10); }
+  .btn-disabled { opacity: 0.4; cursor: not-allowed; background: var(--primary); color: #fff; }
+  .btn-outline {
+    background: transparent; color: var(--text-sub); border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-text {
+    background: transparent; color: var(--text-sub); border: none;
+    font-size: 13px; padding: 0 8px; cursor: pointer;
+  }
+  .btn-text:hover { color: var(--text-main); }
+  .btn-sm { height: 32px; padding: 0 12px; font-size: 13px; }
+
+  /* 输入框 */
+  .input-group { display: flex; flex-direction: column; gap: 4px; }
+  .input-group label { font-size: 12px; color: var(--text-sub); font-weight: 500; }
+  .input-field {
+    height: 36px; padding: 0 12px; background: var(--card-bg);
+    border: 1px solid var(--border); border-radius: 6px; color: var(--text-main);
+    font-size: 14px; outline: none; min-width: 200px; font-family: inherit;
+  }
+  .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(77,124,254,0.15); }
+  .input-field::placeholder { color: var(--text-placeholder); }
+  .select-field {
+    height: 36px; padding: 0 12px; background: var(--card-bg);
+    border: 1px solid var(--border); border-radius: 6px; color: var(--text-main);
+    font-size: 14px; outline: none; min-width: 200px; font-family: inherit;
+  }
+  .select-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(77,124,254,0.15); }
+
+  /* 工具条 */
+  .toolbar {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+  }
+  .toolbar .file-count { font-size: 13px; color: var(--text-sub); margin-left: 8px; }
+  .toolbar .spacer { flex: 1; }
+
+  /* 文件列表 */
+  .file-list-widget {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 4px; min-height: 140px; margin-bottom: 16px;
+  }
+  .fl-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+    border-radius: 6px; margin: 2px 0; cursor: pointer; min-height: 40px;
+    font-size: 13px; color: var(--text-main);
+  }
+  .fl-item:hover { background: var(--card-hover); }
+  .fl-item .fl-icon {
+    width: 28px; height: 28px; background: var(--primary-light-10); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary); font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .fl-item .fl-icon.green { background: rgba(52,199,89,0.12); color: var(--success); }
+  .fl-item .fl-icon.orange { background: rgba(255,149,0,0.12); color: var(--warning); }
+  .fl-item .fl-name { flex: 1; }
+  .fl-item .fl-size { font-size: 11px; color: var(--text-muted); }
+  .fl-item .fl-remove {
+    width: 20px; height: 20px; border-radius: 4px; display: flex;
+    align-items: center; justify-content: center; color: var(--text-muted);
+    font-size: 12px; cursor: pointer;
+  }
+  .fl-item .fl-remove:hover { background: var(--card-hover); color: var(--error); }
+
+  /* 进度条 */
+  .progress-bar { height: 6px; background: var(--card-hover); border-radius: 999px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--primary); border-radius: 999px; }
+  .progress-fill.green { background: var(--success); }
+
+  /* 单选 */
+  .radio-group { display: flex; flex-direction: column; gap: 8px; }
+  .radio-item {
+    display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 0;
+  }
+  .radio-dot {
+    width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+  .radio-dot.checked { border-color: var(--primary); }
+  .radio-dot.checked::after {
+    content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--primary);
+  }
+  .radio-item .radio-label { font-size: 14px; color: var(--text-main); }
+
+  /* 结果卡片 */
+  .result-card {
+    background: var(--card-bg); border: 1px solid var(--primary); border-radius: 8px; padding: 16px;
+  }
+  .result-card .result-title {
+    font-size: 14px; font-weight: 600; color: var(--primary); margin-bottom: 8px;
+  }
+  .result-card .result-body { font-size: 13px; color: var(--text-main); line-height: 1.8; }
+
+  /* 提示条 */
+  .info-bar {
+    padding: 12px 16px;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .info-bar .info-icon { color: var(--primary); font-size: 14px; }
+  .info-bar .info-text { font-size: 13px; color: var(--text-sub); }
+
+  /* 滑条 */
+  .slider-row { display: flex; align-items: center; gap: 12px; }
+  .slider-track {
+    flex: 1; height: 6px; background: var(--card-hover); border-radius: 3px;
+    position: relative; cursor: pointer;
+  }
+  .slider-track .fill { height: 100%; background: var(--primary); border-radius: 3px; }
+  .slider-track .thumb {
+    width: 16px; height: 16px; background: var(--card-bg); border-radius: 50%;
+    position: absolute; top: -5px; transform: translateX(-50%);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15); border: 1px solid var(--border);
+  }
+  .slider-value { font-size: 13px; color: var(--text-main); min-width: 32px; text-align: right; font-family: 'SF Mono', 'Consolas', monospace; }
+
+  /* 水印双栏 */
+  .watermark-layout { display: grid; grid-template-columns: 320px 1fr; gap: 16px; }
+  .wm-panel { display: flex; flex-direction: column; gap: 12px; }
+  .wm-form-group { display: flex; flex-direction: column; gap: 4px; }
+  .wm-form-group label { font-size: 12px; color: var(--text-sub); font-weight: 500; }
+  .wm-preview-area {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 400px; color: var(--text-muted); font-size: 14px; flex-direction: column; gap: 8px;
+    box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+  }
+  .wm-preview-area .page-mock {
+    width: 220px; height: 300px; background: #fff; border-radius: 4px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08); position: relative; display: flex;
+    align-items: center; justify-content: center; flex-direction: column;
+  }
+  .wm-preview-area .page-mock .watermark-text {
+    color: rgba(0,0,0,0.08); font-size: 22px; font-weight: 700;
+    transform: rotate(-30deg); position: absolute;
+  }
+
+  /* 模板卡片网格 */
+  .template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .template-card {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; cursor: pointer; transition: all 0.25s ease; box-shadow: var(--shadow-sm);
+  }
+  .template-card:hover { border-color: var(--primary); background: var(--card-hover); box-shadow: var(--shadow-md); }
+  .template-card .t-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin-bottom: 12px;
+  }
+  .template-card .t-icon.blue { background: var(--primary-light-12); color: var(--primary); }
+  .template-card .t-icon.purple { background: rgba(175,82,222,0.12); color: #AF52DE; }
+  .template-card .t-icon.green { background: rgba(52,199,89,0.12); color: var(--success); }
+  .template-card .t-icon.orange { background: rgba(255,149,0,0.12); color: var(--warning); }
+  .template-card .t-name { font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 4px; }
+  .template-card .t-desc { font-size: 12px; color: var(--text-sub); margin-bottom: 8px; line-height: 1.5; }
+  .template-card .t-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    background: var(--primary-light-12); color: var(--primary); font-size: 11px; font-weight: 500;
+  }
+  .template-card .t-footer {
+    display: flex; align-items: center; justify-content: space-between; margin-top: 12px;
+    padding-top: 12px; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-muted);
+  }
+
+  /* 设置 */
+  .settings-group-title {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px; margin-top: 24px;
+  }
+  .settings-group-title:first-child { margin-top: 0; }
+  .settings-group-title .bar { width: 3px; height: 14px; background: var(--primary); border-radius: 2px; }
+  .settings-group-title span {
+    font-size: 12px; color: var(--text-muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .settings-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow-sm);
+  }
+  .settings-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row .label-group { display: flex; flex-direction: column; gap: 2px; }
+  .settings-row .label-group .title { font-size: 14px; font-weight: 500; color: var(--text-main); }
+  .settings-row .label-group .hint { font-size: 12px; color: var(--text-sub); }
+  .settings-row .control-group { display: flex; align-items: center; gap: 8px; }
+  .about-card { padding: 20px 24px; }
+  .about-card .about-row { display: flex; align-items: center; gap: 16px; }
+  .about-card .about-icon {
+    width: 44px; height: 44px; background: linear-gradient(135deg, var(--primary), #6B8FFF);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 20px; flex-shrink: 0;
+  }
+  .about-card .about-info { flex: 1; }
+  .about-card .about-name { font-size: 15px; font-weight: 700; color: var(--text-main); }
+  .about-card .about-version { font-size: 12px; color: var(--text-sub); }
+  .about-card .about-desc { font-size: 11px; color: var(--text-muted); }
+  .about-card .about-actions { display: flex; gap: 8px; }
+
+  /* 切换开关 */
+  .toggle-switch {
+    width: 44px; height: 24px; background: var(--card-hover); border-radius: 12px;
+    position: relative; cursor: pointer; border: 1px solid var(--border);
+    transition: all 0.2s ease; display: inline-block;
+  }
+  .toggle-switch.on { background: var(--primary); border-color: var(--primary); }
+  .toggle-knob {
+    width: 20px; height: 20px; background: #fff; border-radius: 50%;
+    position: absolute; top: 1px; left: 1px; transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .toggle-switch.on .toggle-knob { left: 21px; }
+
+  /* 页脚 */
+  .footer {
+    text-align: center; padding: 24px 0 16px;
+    color: var(--text-muted); font-size: 11px;
+  }
+
+  /* 入场动画 */
+  .animate-in {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease forwards;
+  }
+  .animate-in.delay-1 { animation-delay: 0.1s; }
+  .animate-in.delay-2 { animation-delay: 0.15s; }
+  .animate-in.delay-3 { animation-delay: 0.2s; }
+  .animate-in.delay-4 { animation-delay: 0.25s; }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-stagger { opacity: 0; animation: cardStagger 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+  .card-stagger:nth-child(1) { animation-delay: 0.15s; }
+  .card-stagger:nth-child(2) { animation-delay: 0.22s; }
+  .card-stagger:nth-child(3) { animation-delay: 0.29s; }
+  .card-stagger:nth-child(4) { animation-delay: 0.36s; }
+  @keyframes cardStagger {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 响应式 */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    .template-grid { grid-template-columns: repeat(2, 1fr); }
+    .watermark-layout { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .cards-grid, .template-grid { grid-template-columns: 1fr; }
+    .content-inner { padding: 24px 16px; }
+    .hero-title { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 自定义标题栏 ===== -->
+<div class="title-bar">
+  <div class="hint">印流PDflow · 浅色模式全页面设计稿</div>
+  <div class="title-btn">—</div>
+  <div class="title-btn">□</div>
+  <div class="title-btn close">✕</div>
+</div>
+
+<!-- ===== 主布局 ===== -->
+<div class="app-container">
+
+  <!-- ===== 侧边栏 ===== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">印</div>
+      <span class="brand-text">印流PDflow</span>
+    </div>
+
+    <nav class="nav-section">
+      <div class="nav-row active" data-page="home">
+        <div class="nav-indicator"></div>
+        <span class="nav-icon">⌂</span>
+        <span class="nav-label">首页</span>
+      </div>
+      <div class="nav-row" data-page="merge">
+        <div class="nav-indicator"></div>
+        <span class="nav-icon">⊕</span>
+        <span class="nav-label">合并拆分</span>
+      </div>
+      <div class="nav-row" data-page="compress">
+        <div class="nav-indicator"></div>
+        <span class="nav-icon">⊞</span>
+        <span class="nav-label">压缩优化</span>
+      </div>
+      <div class="nav-row" data-page="convert">
+        <div class="nav-indicator"></div>
+        <span class="nav-icon">⇄</span>
+        <span class="nav-label">格式转换</span>
+      </div>
+      <div class="nav-row" data-page="watermark">
+        <div class="nav-indicator"></div>
+        <span class="nav-icon">≈</span>
+        <span class="nav-label">水印处理</span>
+      </div>
+      <div class="nav-row" data-page="template">
+        <div class="nav-indicator"></div>
+        <span class="nav-icon">▦</span>
+        <span class="nav-label">模板排版</span>
+        <span class="nav-badge">New</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="nav-row" data-page="settings">
+        <div class="nav-indicator"></div>
+        <span class="nav-icon">⚙</span>
+        <span class="nav-label">设置</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== 内容区 ===== -->
+  <main class="content">
+    <div class="content-inner">
+
+      <!-- ================================================================ -->
+      <!-- 页面 1: 首页 — 完全匹配深色模式布局 -->
+      <!-- ================================================================ -->
+      <div class="page-section active" id="page-home">
+        <!-- 品牌区：大标题 + V1.0徽标 + 副标题 -->
+        <section class="hero-section animate-in">
+          <div class="hero-top">
+            <div class="hero-title-group">
+              <h1 class="hero-title">
+                印流<span class="accent-char">P</span>Dflow
+              </h1>
+              <span class="hero-badge">
+                <span class="dot"></span>
+                V1.0
+              </span>
+            </div>
+          </div>
+          <p class="hero-subtitle">设计师专用的轻量级PDF工具箱</p>
+        </section>
+
+        <!-- 功能卡片区：4个毛玻璃卡片 + SVG图标 -->
+        <section class="cards-section">
+          <div class="section-header animate-in delay-1">
+            <span class="section-title-text">工具箱</span>
+          </div>
+          <div class="cards-grid">
+            <div class="func-card card-stagger">
+              <div class="card-glow"></div>
+              <div class="card-icon-wrap">
+                <div class="card-icon-bg"></div>
+                <div class="card-icon">
+                  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                </div>
+              </div>
+              <h3 class="card-title">合并拆分</h3>
+              <p class="card-desc">PDF 合并、拆分与页面管理</p>
+            </div>
+            <div class="func-card card-stagger">
+              <div class="card-glow"></div>
+              <div class="card-icon-wrap">
+                <div class="card-icon-bg"></div>
+                <div class="card-icon">
+                  <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                </div>
+              </div>
+              <h3 class="card-title">压缩优化</h3>
+              <p class="card-desc">智能减小 PDF 文件体积</p>
+            </div>
+            <div class="func-card card-stagger">
+              <div class="card-glow"></div>
+              <div class="card-icon-wrap">
+                <div class="card-icon-bg"></div>
+                <div class="card-icon">
+                  <svg viewBox="0 0 24 24"><polyline points="5 9 2 12 5 15"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+                </div>
+              </div>
+              <h3 class="card-title">格式转换</h3>
+              <p class="card-desc">图片与 PDF 双向互转</p>
+            </div>
+            <div class="func-card card-stagger">
+              <div class="card-glow"></div>
+              <div class="card-icon-wrap">
+                <div class="card-icon-bg"></div>
+                <div class="card-icon">
+                  <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/><line x1="12" y1="9" x2="12" y2="15"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+                </div>
+              </div>
+              <h3 class="card-title">水印处理</h3>
+              <p class="card-desc">添加文字或图片水印</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 渐变分割线 -->
+        <div class="section-divider animate-in delay-2">
+          <div class="line-accent"></div>
+          <div class="line"></div>
+        </div>
+
+        <!-- 最近使用文件 -->
+        <section class="recent-section animate-in delay-2">
+          <div class="recent-header">
+            <div class="recent-title">
+              <span class="title-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </span>
+              最近使用的文件
+            </div>
+            <span class="recent-clear">清空记录</span>
+          </div>
+          <div class="file-list">
+            <div class="file-item">
+              <div class="file-icon-pdf red">PDF</div>
+              <div class="file-info">
+                <div class="file-name">示例文件_2026-05-12.pdf</div>
+                <div class="file-meta">— · 2026-05-12 14:32</div>
+              </div>
+              <span class="file-status">刚刚</span>
+              <button class="file-action" title="更多">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              </button>
+            </div>
+            <div class="file-item">
+              <div class="file-icon-pdf red">PDF</div>
+              <div class="file-info">
+                <div class="file-name">示例文件_2026-05-11.pdf</div>
+                <div class="file-meta">— · 2026-05-11 09:15</div>
+              </div>
+              <span class="file-status">昨天</span>
+              <button class="file-action" title="更多">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              </button>
+            </div>
+            <div class="file-item">
+              <div class="file-icon-pdf red">PDF</div>
+              <div class="file-info">
+                <div class="file-name">示例文件_2026-05-09.pdf</div>
+                <div class="file-meta">— · 2026-05-09 16:48</div>
+              </div>
+              <span class="file-status">3天前</span>
+              <button class="file-action" title="更多">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              </button>
+            </div>
+            <div class="file-item">
+              <div class="file-icon-pdf">PDF</div>
+              <div class="file-info">
+                <div class="file-name">示例文件_2026-05-08.pdf</div>
+                <div class="file-meta">— · 2026-05-08 11:20</div>
+              </div>
+              <span class="file-status">4天前</span>
+              <button class="file-action" title="更多">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <div style="height:32px"></div>
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- 页面 2~7: 合并拆分 / 压缩 / 格式转换 / 水印处理 / 模板排版 / 设置 -->
+      <!-- ================================================================ -->
+      <div class="page-section" id="page-merge">
+        <div class="page-indicator"><span class="dot"></span> 合并拆分 / Merge &amp; Split</div>
+
+        <!-- 整页单卡片布局，匹配深色模式 -->
+        <div class="section-card no-pad">
+          <div style="padding:20px 20px 0"><div class="section-title">合并拆分</div></div>
+          <div style="padding:0 20px 16px">
+
+            <!-- 顶部工具条 -->
+            <div class="toolbar">
+              <button class="btn btn-primary">+ 添加PDF文件</button>
+              <button class="btn btn-text">清空全部</button>
+              <div class="spacer"></div>
+              <span class="file-count">已添加 0 个文件</span>
+            </div>
+
+            <!-- 文件列表 -->
+            <div class="file-list-widget" style="min-height:140px;display:flex;align-items:center;justify-content:center;color:var(--text-placeholder);font-size:13px">
+              尚未添加文件，请点击上方按钮添加 PDF 文件
+            </div>
+
+            <!-- 合并/拆分模式切换（左侧按钮激活态，右侧未激活态） -->
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+              <button class="btn" style="background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;padding:6px 20px;min-height:36px;cursor:pointer;font-family:inherit;font-weight:500">合并</button>
+              <button class="btn" style="background:transparent;color:var(--text-sub);border:1px solid var(--border);border-radius:8px;font-size:14px;padding:6px 20px;min-height:36px;cursor:pointer;font-family:inherit">拆分</button>
+              <div style="flex:1"></div>
+              <button class="btn btn-primary" style="min-height:40px;padding:8px 24px">合并为单个PDF</button>
+            </div>
+
+            <!-- 提示文字 -->
+            <div class="info-bar"><span class="info-icon">ⓘ</span><span class="info-text">选择至少 2 个 PDF 文件，合并为一个 PDF 文件 · 拖拽文件可调整顺序</span></div>
+
+            <!-- 状态信息 -->
+            <div style="font-size:13px;color:var(--text-sub);min-height:20px;margin-top:4px"></div>
+
+            <!-- 拆分参数区域（深色模式：默认隐藏，拆分时显示）-->
+            <div style="margin-top:12px;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:8px;display:none">
+              <div style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:8px">拆分参数</div>
+              <!-- 单选：每页单独保存 -->
+              <div class="radio-group">
+                <label class="radio-item"><span class="radio-dot checked"></span><span class="radio-label">每页单独保存</span></label>
+                <label class="radio-item"><span class="radio-dot"></span><span class="radio-label">按页码范围拆分</span></label>
+              </div>
+              <!-- 每 N 页为一份 -->
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+                <span style="font-size:13px;color:var(--text-sub)">每</span>
+                <input class="input-field" type="text" value="1" style="width:70px;text-align:center;font-family:monospace">
+                <span style="font-size:13px;color:var(--text-sub)">页为一份</span>
+              </div>
+              <!-- 页码范围输入（默认隐藏） -->
+              <div style="margin-top:8px;display:none">
+                <input class="input-field" type="text" placeholder="如：1-3, 4-6, 7-10" style="width:100%">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="page-section" id="page-compress">
+        <div class="page-indicator"><span class="dot"></span> 压缩 / Compress</div>
+        <div class="section-card no-pad">
+          <div style="padding:20px 20px 0"><div class="section-title">压缩 PDF</div></div>
+          <div style="padding:0 20px 16px">
+            <div class="toolbar"><button class="btn btn-primary">选择PDF文件</button><button class="btn btn-text">清空全部</button><div class="spacer"></div><span class="file-count">已选 0 个文件</span></div>
+            <div class="file-list-widget" style="min-height:140px;display:flex;align-items:center;justify-content:center;color:var(--text-placeholder);font-size:13px">
+              尚未添加文件，请点击上方按钮选择 PDF 文件
+            </div>
+            <!-- 压缩质量卡片 -->
+            <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px">
+              <div style="font-size:15px;font-weight:600;color:var(--text-main);margin-bottom:10px">压缩质量</div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px">
+                <div class="radio-group">
+                  <label class="radio-item"><span class="radio-dot checked"></span><span class="radio-label">高质量（适合打印）</span></label>
+                  <label class="radio-item"><span class="radio-dot"></span><span class="radio-label">中等质量（适合阅读）</span></label>
+                  <label class="radio-item"><span class="radio-dot"></span><span class="radio-label">低质量（适合屏幕显示）</span></label>
+                </div>
+              </div>
+            </div>
+            <!-- 批量操作行 -->
+            <div class="toolbar" style="margin-bottom:4px"><button class="btn btn-primary">开始批量压缩</button><span style="font-size:13px;color:var(--text-sub)" id="compress-progress-text"></span><div class="spacer"></div></div>
+            <!-- 进度条 -->
+            <div style="margin-bottom:8px"><div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div></div>
+            <!-- 状态信息 -->
+            <div style="font-size:13px;color:var(--text-sub);min-height:20px" id="compress-status"></div>
+            <!-- 结果卡片（默认隐藏）-->
+            <div class="result-card" style="display:none">
+              <div class="result-title">✓ 批量压缩完成</div>
+              <div class="result-body">
+                <div>完成: 0 | 失败: 0 | 总计: 0 个文件</div>
+                <div>原始总大小：0 MB</div>
+                <div>压缩后总大小：0 MB</div>
+              </div>
+              <div style="font-size:14px;font-weight:600;color:var(--primary);margin-top:4px">平均压缩率：减少 0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-section" id="page-convert">
+        <div class="page-indicator"><span class="dot"></span> 格式转换 / Convert</div>
+
+        <!-- 区域1：文件选择 -->
+        <div class="section-card no-pad">
+          <div style="padding:16px 20px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <button class="btn btn-primary" style="min-width:140px;height:38px">选择文件</button>
+              <button class="btn btn-text">清空</button>
+              <div style="flex:1"></div>
+              <span class="file-count">已选 0 个文件</span>
+            </div>
+            <div class="file-list-widget" style="min-height:120px;display:flex;align-items:center;justify-content:center;color:var(--text-placeholder);font-size:13px">
+              暂无文件，点击"选择文件"添加
+            </div>
+          </div>
+        </div>
+
+        <!-- 区域2：转换类型 -->
+        <div class="section-card no-pad">
+          <div style="padding:16px 20px">
+            <div style="font-size:14px;font-weight:600;color:var(--text-main);margin-bottom:10px">转换格式</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn convert-type-btn selected" style="background:var(--primary);color:#fff;border:1px solid var(--primary);border-radius:6px;font-size:13px;font-weight:600;padding:8px 16px;min-height:36px;cursor:pointer;border:none;font-family:inherit" data-type="pdf_word">PDF → Word</button>
+              <button class="btn convert-type-btn" style="background:var(--bg);color:var(--text-sub);border:1px solid var(--border);border-radius:6px;font-size:13px;padding:8px 16px;min-height:36px;cursor:pointer;font-family:inherit" data-type="pdf_excel">PDF → Excel</button>
+              <button class="btn convert-type-btn" style="background:var(--bg);color:var(--text-sub);border:1px solid var(--border);border-radius:6px;font-size:13px;padding:8px 16px;min-height:36px;cursor:pointer;font-family:inherit" data-type="pdf_ppt">PDF → PPT</button>
+              <button class="btn convert-type-btn" style="background:var(--bg);color:var(--text-sub);border:1px solid var(--border);border-radius:6px;font-size:13px;padding:8px 16px;min-height:36px;cursor:pointer;font-family:inherit" data-type="pdf_img">PDF → 图片</button>
+              <button class="btn convert-type-btn" style="background:var(--bg);color:var(--text-sub);border:1px solid var(--border);border-radius:6px;font-size:13px;padding:8px 16px;min-height:36px;cursor:pointer;font-family:inherit" data-type="img_pdf">图片 → PDF</button>
+              <button class="btn convert-type-btn" style="background:var(--bg);color:var(--text-sub);border:1px solid var(--border);border-radius:6px;font-size:13px;padding:8px 16px;min-height:36px;cursor:pointer;font-family:inherit" data-type="batch">批量转换</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 区域3：参数设置 -->
+        <div class="section-card no-pad">
+          <div style="padding:16px 20px">
+            <div style="font-size:14px;font-weight:600;color:var(--text-main);margin-bottom:10px">参数设置</div>
+
+            <!-- PDF→Word / Excel / PPT 通用（无额外参数） -->
+            <div class="param-panel" data-for="common" style="font-size:13px;color:var(--text-muted)">此格式无需额外参数，请直接选择文件并点击开始转换</div>
+
+            <!-- PDF→图片 参数 -->
+            <div class="param-panel" data-for="pdf_img" style="display:none">
+              <div style="display:flex;gap:24px;flex-wrap:wrap">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:13px;color:var(--text-sub)">输出格式：</span>
+                  <select class="select-field" style="min-width:100px"><option>PNG</option><option>JPEG</option><option>WebP</option><option>BMP</option></select>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:13px;color:var(--text-sub)">DPI：</span>
+                  <select class="select-field" style="min-width:80px"><option>72</option><option selected>150</option><option>200</option><option>300</option></select>
+                </div>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:6px">提示：PNG 支持透明背景，JPEG 体积更小</div>
+            </div>
+
+            <!-- 图片→PDF 参数 -->
+            <div class="param-panel" data-for="img_pdf" style="display:none">
+              <div style="display:flex;gap:24px;flex-wrap:wrap">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:13px;color:var(--text-sub)">页面方向：</span>
+                  <select class="select-field" style="min-width:100px"><option>纵向</option><option>横向</option><option>自动</option></select>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:13px;color:var(--text-sub)">图片质量：</span>
+                  <select class="select-field" style="min-width:130px"><option>低（压缩率高）</option><option>中</option><option selected>高（最佳质量）</option></select>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:13px;color:var(--text-sub)">页面大小：</span>
+                  <select class="select-field" style="min-width:120px"><option>A4</option><option>A3</option><option>Letter</option><option>Legal</option><option>自动适应</option></select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 批量转换 参数 -->
+            <div class="param-panel" data-for="batch" style="display:none">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span style="font-size:13px;color:var(--text-sub)">输出格式：</span>
+                <select class="select-field" style="min-width:160px">
+                  <option>PDF（图片转PDF）</option>
+                  <option>Word（PDF转Word）</option>
+                  <option>Excel（PDF转Excel）</option>
+                  <option>PPT（PDF转PPT）</option>
+                  <option>图片（PDF转图片）</option>
+                </select>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:6px">提示：批量转换将根据输入文件类型自动适配，图片→PDF 或 PDF→所选格式</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 区域4：输出目录 -->
+        <div class="section-card no-pad">
+          <div style="padding:16px 20px">
+            <div style="font-size:14px;font-weight:600;color:var(--text-main);margin-bottom:10px">输出目录</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:13px;color:var(--text-muted)">未选择</span>
+              <button class="btn btn-outline btn-sm" style="margin-left:8px">选择目录</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 区域5：底部操作 -->
+        <div style="display:flex;align-items:center;gap:16px;margin:12px 0 8px">
+          <button class="btn btn-primary" style="min-width:140px;height:40px;opacity:0.4" disabled>开始转换</button>
+          <span style="font-size:13px;color:var(--text-muted)"></span>
+        </div>
+        <div class="progress-bar" style="margin-bottom:8px"><div class="progress-fill" style="width:0%"></div></div>
+        <div class="result-card" style="display:none">
+          <div class="result-title">✓ 转换完成</div>
+          <div class="result-body">
+            <div>成功：0 个文件</div>
+            <div>失败：0 个文件</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-section" id="page-watermark">
+        <div class="page-indicator"><span class="dot"></span> 水印处理 / Watermark</div>
+
+        <!-- 双栏布局：左侧参数面板 + 右侧预览区 -->
+        <div style="display:flex;gap:0;align-items:flex-start">
+
+          <!-- 左侧参数面板（约380px宽，带右侧分割线） -->
+          <div style="width:380px;min-width:380px;padding-right:16px;border-right:1px solid var(--border)">
+
+            <!-- 1. PDF 文件 -->
+            <div class="section-card" style="margin-bottom:12px">
+              <div style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:8px">PDF 文件</div>
+              <div style="display:flex;gap:8px">
+                <input class="input-field" type="text" placeholder="选择 PDF 文件..." readonly style="flex:1;font-size:12px">
+                <button class="btn btn-outline btn-sm" style="white-space:nowrap">浏览...</button>
+              </div>
+            </div>
+
+            <!-- 2. 水印类型 -->
+            <div class="section-card" style="margin-bottom:12px">
+              <div style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:8px">水印类型</div>
+              <select class="select-field" style="width:100%">
+                <option>文字水印</option>
+                <option>图片水印</option>
+              </select>
+            </div>
+
+            <!-- 3. 文字水印参数 -->
+            <div class="section-card" style="margin-bottom:12px">
+              <div style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:8px">文字水印参数</div>
+              <div class="wm-form-group"><label>文字内容</label><input class="input-field" type="text" value="印流PDflow" style="width:100%"></div>
+              <div class="wm-form-group" style="margin-top:8px">
+                <label>字号</label>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <input class="input-field" type="text" value="48 pt" style="width:80px;text-align:center">
+                </div>
+              </div>
+              <div class="wm-form-group" style="margin-top:8px">
+                <label>颜色</label>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:32px;height:32px;background:#888888;border:1px solid var(--border);border-radius:4px;cursor:pointer;flex-shrink:0"></div>
+                  <span style="font-size:13px;color:var(--text-sub);font-family:'SF Mono','Consolas',monospace">#888888</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. 图片水印参数（默认隐藏） -->
+            <div class="section-card" style="margin-bottom:12px;display:none">
+              <div style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:8px">图片水印参数</div>
+              <div style="display:flex;gap:8px">
+                <input class="input-field" type="text" placeholder="选择水印图片..." readonly style="flex:1;font-size:12px">
+                <button class="btn btn-outline btn-sm" style="white-space:nowrap">浏览...</button>
+              </div>
+            </div>
+
+            <!-- 5. 通用参数 -->
+            <div class="section-card" style="margin-bottom:12px">
+              <div style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:8px">通用参数</div>
+
+              <!-- 透明度 -->
+              <div class="wm-form-group"><label>透明度</label>
+                <div class="slider-row"><div class="slider-track"><div class="fill" style="width:30%"></div><div class="thumb" style="left:30%"></div></div><span class="slider-value">30%</span></div>
+              </div>
+
+              <!-- 旋转 -->
+              <div class="wm-form-group" style="margin-top:8px"><label>旋转</label>
+                <div class="slider-row"><div class="slider-track"><div class="fill" style="width:38%"></div><div class="thumb" style="left:38%"></div></div><span class="slider-value">-45°</span></div>
+              </div>
+
+              <!-- 位置 -->
+              <div class="wm-form-group" style="margin-top:8px"><label>位置</label>
+                <select class="select-field" style="width:100%"><option>居中</option><option>平铺</option><option>左上角</option><option>右上角</option><option>左下角</option><option>右下角</option></select>
+              </div>
+
+              <!-- 缩放 -->
+              <div class="wm-form-group" style="margin-top:8px"><label>缩放</label>
+                <div class="slider-row"><div class="slider-track"><div class="fill" style="width:30%"></div><div class="thumb" style="left:30%"></div></div><span class="slider-value">30%</span></div>
+              </div>
+
+              <!-- 图层 -->
+              <div class="wm-form-group" style="margin-top:8px"><label>图层</label>
+                <select class="select-field" style="width:100%"><option>覆盖 (over)</option><option>底层 (under)</option></select>
+              </div>
+            </div>
+
+            <!-- 6. 操作按钮 -->
+            <div class="section-card">
+              <div style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:8px">操作</div>
+              <div style="display:flex;gap:12px">
+                <button class="btn btn-primary" style="flex:1">🔄 预览</button>
+                <button class="btn btn-secondary" style="flex:1">📥 导出</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 右侧预览区 -->
+          <div style="flex:1;min-height:500px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px">
+            <div style="font-size:18px;font-weight:700;color:var(--text-main);margin-bottom:16px;align-self:flex-start">水印预览</div>
+            <div style="width:100%;flex:1;display:flex;align-items:center;justify-content:center;background:var(--bg);border:1px dashed var(--border);border-radius:12px;min-height:400px">
+              <div style="font-size:14px;color:var(--text-muted);text-align:center;padding:20px">请先选择 PDF 文件，然后点击「预览」或调整参数</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="page-section" id="page-template">
+        <div class="page-indicator"><span class="dot"></span> 模板排版 / Template Layout</div>
+
+        <!-- 标题 + 新建按钮 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h2 style="font-size:24px;font-weight:700;color:var(--text-main);margin:0">模板排版</h2>
+          <button class="btn btn-primary btn-sm">+ 新建模板</button>
+        </div>
+
+        <!-- 模板卡片网格（3列，只显示3个模板） -->
+        <div class="template-grid">
+          <!-- 名片 -->
+          <div class="func-card" style="cursor:pointer;padding:24px">
+            <div class="card-glow"></div>
+            <div style="font-size:36px;margin-bottom:12px;line-height:1">🪪</div>
+            <h3 class="card-title" style="font-size:15px;font-weight:600;color:var(--text-main);margin-bottom:4px">名片</h3>
+            <p class="card-desc" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">标准商务名片排版，支持单面/双面设计</p>
+            <span style="display:inline-block;padding:3px 10px;border-radius:4px;background:var(--primary-light-12);color:var(--primary);font-size:11px;font-weight:500">印刷物料</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)">
+              <span>v2.1</span>
+              <span>上次使用: 2天前</span>
+            </div>
+          </div>
+
+          <!-- 单页公告 -->
+          <div class="func-card" style="cursor:pointer;padding:24px">
+            <div class="card-glow"></div>
+            <div style="font-size:36px;margin-bottom:12px;line-height:1">📋</div>
+            <h3 class="card-title" style="font-size:15px;font-weight:600;color:var(--text-main);margin-bottom:4px">单页公告</h3>
+            <p class="card-desc" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">A4 单页公告排版模板，适合通知、启事等场景</p>
+            <span style="display:inline-block;padding:3px 10px;border-radius:4px;background:var(--primary-light-12);color:var(--primary);font-size:11px;font-weight:500">办公文档</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)">
+              <span>v2.0</span>
+              <span>上次使用: 5天前</span>
+            </div>
+          </div>
+
+          <!-- 产品规格 -->
+          <div class="func-card" style="cursor:pointer;padding:24px">
+            <div class="card-glow"></div>
+            <div style="font-size:36px;margin-bottom:12px;line-height:1">📐</div>
+            <h3 class="card-title" style="font-size:15px;font-weight:600;color:var(--text-main);margin-bottom:4px">产品规格</h3>
+            <p class="card-desc" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">产品规格说明排版模板，支持图文混排</p>
+            <span style="display:inline-block;padding:3px 10px;border-radius:4px;background:var(--primary-light-12);color:var(--primary);font-size:11px;font-weight:500">技术文档</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)">
+              <span>v2.0</span>
+              <span>新模板</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部状态 -->
+        <div style="text-align:center;padding:16px 0 8px;font-size:13px;color:var(--text-sub)">共 3 个可用模板 · 点击卡片进入模板编辑界面</div>
+      </div>
+
+      <div class="page-section" id="page-settings">
+        <div class="page-indicator"><span class="dot"></span> 设置 / Settings</div>
+        <div class="settings-group-title"><div class="bar"></div><span>通用</span></div>
+        <div class="settings-card">
+          <div class="settings-row"><div class="label-group"><span class="title">语言</span><span class="hint">界面显示语言</span></div><div class="control-group"><select class="select-field" style="min-width:140px"><option>简体中文</option><option>繁體中文</option><option>English</option></select></div></div>
+          <div class="settings-row"><div class="label-group"><span class="title">主题模式</span><span class="hint">切换深色/浅色界面主题</span></div><div class="control-group"><div style="display:flex;align-items:center;gap:10px"><div class="toggle-switch on"><div class="toggle-knob"></div></div><span style="font-size:13px;color:var(--text-main)">浅色模式</span></div></div></div>
+          <div class="settings-row"><div class="label-group"><span class="title">开发者模式</span><span class="hint">显示「速文创作」等实验性功能</span></div><div class="control-group"><div class="toggle-switch"><div class="toggle-knob"></div></div></div></div>
+        </div>
+        <div class="settings-group-title"><div class="bar"></div><span>输出</span></div>
+        <div class="settings-card">
+          <div class="settings-row"><div class="label-group"><span class="title">默认输出目录</span><span class="hint">处理后的文件默认保存位置</span></div><div class="control-group"><input class="input-field" type="text" value="C:\Users\Designer\Documents\PDFflow_Output" readonly style="min-width:200px;font-size:12px"><button class="btn btn-outline btn-sm">浏览...</button></div></div>
+          <div class="settings-row"><div class="label-group"><span class="title">文件名后缀</span><span class="hint">自动为输出文件添加后缀名</span></div><div class="control-group"><input class="input-field" type="text" value="_out" style="width:80px;text-align:center;font-family:monospace"><span style="font-size:12px;color:var(--text-muted)">+ 扩展名</span></div></div>
+        </div>
+        <div class="settings-group-title"><div class="bar"></div><span>关于</span></div>
+        <div class="settings-card about-card"><div class="about-row"><div class="about-icon">印</div><div class="about-info"><div class="about-name">印流PDflow</div><div class="about-version">v1.0.0 · 2026.05.22</div><div class="about-desc">设计师专用的轻量级 PDF 工具箱</div></div><div class="about-actions"><button class="btn btn-outline btn-sm">检查更新</button><button class="btn btn-outline btn-sm">反馈</button></div></div></div>
+        <div style="text-align:center;padding:8px 0;color:var(--text-muted);font-size:11px">设置修改后自动保存 · 语言切换需重启生效</div>
+      </div>
+
+      <div class="footer">印流PDflow · 浅色模式全页面设计稿 · 2026-05-22 · 共 7 个页面 · 点击左侧导航切换</div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+// 页面切换交互
+const navItems = document.querySelectorAll('.nav-row');
+const pageSections = document.querySelectorAll('.page-section');
+navItems.forEach(item => {
+  item.addEventListener('click', function() {
+    navItems.forEach(n => n.classList.remove('active'));
+    this.classList.add('active');
+    const pageId = this.dataset.page;
+    pageSections.forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('page-' + pageId);
+    if (target) target.classList.add('active');
+    document.querySelector('.content').scrollTop = 0;
+    window.scrollTo(0, 0);
+  });
+});
+</script>
+
+</body>
+</html>

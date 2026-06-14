@@ -1,0 +1,54 @@
+[
+  {
+    "id": "minimal_white",
+    "name": "极简白",
+    "description": "白底 + 细灰装饰条 + 黑字，干净利落",
+    "preview_color": "#F5F5F5",
+    "values": {
+      "theme_color": "#C0C0C0",
+      "bar_position": "top",
+      "bg_style": "white",
+      "bg_custom_color": "",
+      "font_style": "modern"
+    }
+  },
+  {
+    "id": "business_blue",
+    "name": "商务蓝",
+    "description": "经典深蓝装饰条 + 白底，正式公文风格",
+    "preview_color": "#2C3E6B",
+    "values": {
+      "theme_color": "#2C3E6B",
+      "bar_position": "top",
+      "bg_style": "white",
+      "bg_custom_color": "",
+      "font_style": "formal"
+    }
+  },
+  {
+    "id": "bold_red",
+    "name": "醒目红",
+    "description": "红色装饰条 + 浅灰底，紧急公告/重要通知",
+    "preview_color": "#FF3B30",
+    "values": {
+      "theme_color": "#FF3B30",
+      "bar_position": "top",
+      "bg_style": "light_gray",
+      "bg_custom_color": "",
+      "font_style": "bold"
+    }
+  },
+  {
+    "id": "elegant_green",
+    "name": "典雅绿",
+    "description": "森林绿装饰条 + 白底，喜庆/通知场景",
+    "preview_color": "#34C759",
+    "values": {
+      "theme_color": "#34C759",
+      "bar_position": "left",
+      "bg_style": "white",
+      "bg_custom_color": "",
+      "font_style": "formal"
+    }
+  }
+]

@@ -1,0 +1,77 @@
+{
+  "id": "product_spec",
+  "name": "产品规格",
+  "icon": "📐",
+  "description": "产品规格说明排版模板，支持图文混排",
+  "type": "技术文档",
+  "version": "2.0",
+  "fields": [
+    {"key": "product_name", "label": "产品名称", "type": "text", "required": true, "maxLength": 50, "placeholder": "请输入产品名称"},
+    {"key": "version", "label": "版本号", "type": "text", "required": true, "maxLength": 20, "placeholder": "如：V2.3"},
+    {"key": "description", "label": "产品描述", "type": "textarea", "required": true, "placeholder": "请描述产品功能与定位..."},
+    {
+      "key": "specs",
+      "label": "技术规格",
+      "type": "table",
+      "required": false,
+      "columns": [
+        {"key": "param", "label": "参数"},
+        {"key": "value", "label": "值"}
+      ],
+      "placeholder": "点击\"+\"添加一行"
+    }
+  ],
+  "style_options": {
+    "theme_color": {
+      "label": "主题色",
+      "type": "color_preset",
+      "default": "#3355AA",
+      "options": [
+        {"name": "专业蓝", "value": "#3355AA"},
+        {"name": "科技蓝", "value": "#4D7CFE"},
+        {"name": "活力红", "value": "#FF3B30"},
+        {"name": "森林绿", "value": "#34C759"},
+        {"name": "深邃紫", "value": "#AF52DE"},
+        {"name": "暖阳橙", "value": "#FF9500"},
+        {"name": "高级黑", "value": "#1D1D1F"},
+        {"name": "海洋青", "value": "#5AC8FA"},
+        {"name": "玫瑰金", "value": "#B76E79"}
+      ]
+    },
+    "header_style": {
+      "label": "标题栏样式",
+      "type": "radio",
+      "default": "bar",
+      "options": [
+        {"name": "装饰条", "value": "bar"},
+        {"name": "色块背景", "value": "color_block"},
+        {"name": "无", "value": "none"}
+      ]
+    },
+    "bg_style": {
+      "label": "背景样式",
+      "type": "radio",
+      "default": "white",
+      "options": [
+        {"name": "纯白", "value": "white"},
+        {"name": "浅灰", "value": "light_gray"},
+        {"name": "浅蓝", "value": "light_blue"}
+      ]
+    },
+    "bg_custom_color": {
+      "label": "自定义背景色",
+      "type": "color",
+      "default": ""
+    },
+    "table_style": {
+      "label": "表格样式",
+      "type": "radio",
+      "default": "striped",
+      "options": [
+        {"name": "斑马纹", "value": "striped"},
+        {"name": "线框", "value": "bordered"},
+        {"name": "极简", "value": "minimal"}
+      ]
+    }
+  }
+}

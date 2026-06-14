@@ -1,0 +1,13 @@
+{
+  "ai": {
+    "customModels": [
+      {
+        "name": "DeepSeek-V4-Flash",
+        "endpoint": "https://api.deepseek.com/v1/chat/completions",
+        "apiKey": "sk-9d5471a0195d4d458387542c5ba246f0",
+        "model": "deepseek-v4-flash",
+        "type": "chat"
+      }
+    ]
+  }
+}

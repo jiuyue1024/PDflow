@@ -1,0 +1,1507 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SpeedwritePage</class>
+ <widget class="QWidget" name="SpeedwritePage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>820</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>960</width>
+    <height>640</height>
+   </size>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">
+/* ===== 页面整体 ===== */
+QWidget#SpeedwritePage {
+    background-color: #0A0E17;
+}
+
+/* ===== 主按钮样式 ===== */
+QPushButton#btnNewTask {
+    background-color: #4D7CFE;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 16px;
+    height: 36px;
+}
+QPushButton#btnNewTask:hover { background-color: #3D6CF0; }
+QPushButton#btnNewTask:pressed { background-color: #3560E0; }
+
+/* ===== 轮廓按钮 ===== */
+QPushButton#btnOpenFile {
+    background-color: transparent;
+    color: #848E9C;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    font-size: 13px;
+    padding: 8px 16px;
+    height: 36px;
+}
+QPushButton#btnOpenFile:hover { border-color: rgba(255,255,255,0.2); color: #EAECEF; }
+
+/* ===== 工具栏按钮（透明背景） ===== */
+QPushButton#btnBold, QPushButton#btnItalic, QPushButton#btnUnderline,
+QPushButton#btnStrike, QPushButton#btnAlignLeft, QPushButton#btnAlignCenter,
+QPushButton#btnAlignRight, QPushButton#btnAlignJustify,
+QPushButton#btnList, QPushButton#btnOrderedList,
+QPushButton#btnOutdent, QPushButton#btnIndent,
+QPushButton#btnUndo, QPushButton#btnRedo,
+QPushButton#btnDarkMode {
+    background-color: transparent;
+    color: #848E9C;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    width: 28px;
+    height: 28px;
+}
+QPushButton#btnBold:hover, QPushButton#btnItalic:hover, QPushButton#btnUnderline:hover,
+QPushButton#btnStrike:hover, QPushButton#btnAlignLeft:hover, QPushButton#btnAlignCenter:hover,
+QPushButton#btnAlignRight:hover, QPushButton#btnAlignJustify:hover,
+QPushButton#btnList:hover, QPushButton#btnOrderedList:hover,
+QPushButton#btnOutdent:hover, QPushButton#btnIndent:hover,
+QPushButton#btnUndo:hover, QPushButton#btnRedo:hover,
+QPushButton#btnDarkMode:hover {
+    background-color: rgba(255,255,255,0.06);
+    color: #EAECEF;
+}
+QPushButton#btnBold:checked, QPushButton#btnItalic:checked,
+QPushButton#btnUnderline:checked, QPushButton#btnStrike:checked,
+QPushButton#btnAlignLeft:checked, QPushButton#btnAlignCenter:checked,
+QPushButton#btnAlignRight:checked, QPushButton#btnAlignJustify:checked {
+    background-color: #4D7CFE;
+    color: #FFFFFF;
+}
+
+/* ===== 动作按钮（透明+边框） ===== */
+QPushButton#btnExport, QPushButton#btnExportNormal, QPushButton#btnExportMobile,
+QPushButton#btnMobileMode, QPushButton#btnAiAssistant,
+QPushButton#btnExportMd, QPushButton#btnExportTxt, QPushButton#btnPreview {
+    background-color: transparent;
+    color: #848E9C;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    font-size: 12px;
+    padding: 0 10px;
+    height: 28px;
+}
+QPushButton#btnExport:hover, QPushButton#btnExportNormal:hover, QPushButton#btnExportMobile:hover,
+QPushButton#btnMobileMode:hover, QPushButton#btnAiAssistant:hover,
+QPushButton#btnExportMd:hover, QPushButton#btnExportTxt:hover, QPushButton#btnPreview:hover {
+    background-color: rgba(255,255,255,0.04);
+    color: #EAECEF;
+    border-color: rgba(255,255,255,0.12);
+}
+
+/* ===== 颜色按钮 ===== */
+QPushButton#btnTextColor, QPushButton#btnBgColor {
+    border-radius: 4px;
+    border: 2px solid rgba(255,255,255,0.1);
+    width: 22px;
+    height: 22px;
+}
+QPushButton#btnTextColor { background-color: #1A1A22; }
+QPushButton#btnBgColor { background-color: #FFE066; }
+QPushButton#btnTextColor:hover, QPushButton#btnBgColor:hover { border-color: rgba(255,255,255,0.3); }
+
+/* ===== 下拉框样式 ===== */
+QComboBox#fontCombo, QComboBox#sizeCombo, QComboBox#lineSpacingCombo, QComboBox#bgThemeCombo, QComboBox#exportCombo {
+    background-color: rgba(10,14,23,0.6);
+    color: #EAECEF;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    font-size: 12px;
+    padding: 0 10px;
+    height: 30px;
+    min-width: 80px;
+}
+QComboBox#fontCombo:hover, QComboBox#sizeCombo:hover, QComboBox#lineSpacingCombo:hover, QComboBox#bgThemeCombo:hover {
+    border-color: rgba(255,255,255,0.12);
+}
+QComboBox#fontCombo::drop-down, QComboBox#sizeCombo::drop-down,
+QComboBox#lineSpacingCombo::drop-down, QComboBox#bgThemeCombo::drop-down, QComboBox#exportCombo::drop-down {
+    border: none;
+    width: 20px;
+}
+QComboBox#fontCombo QAbstractItemView, QComboBox#sizeCombo QAbstractItemView,
+QComboBox#lineSpacingCombo QAbstractItemView, QComboBox#bgThemeCombo QAbstractItemView, QComboBox#exportCombo QAbstractItemView {
+    background-color: #181C24;
+    color: #EAECEF;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    selection-background-color: #4D7CFE;
+    selection-color: #FFFFFF;
+    padding: 4px;
+}
+
+/* ===== 编辑器样式 ===== */
+QTextEdit#editorTextEdit {
+    background-color: rgba(10,14,23,0.5);
+    color: #EAECEF;
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 12px;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 15px;
+    padding: 28px;
+    selection-background-color: #4D7CFE;
+    selection-color: #FFFFFF;
+}
+QTextEdit#editorTextEdit:focus {
+    border-color: #4D7CFE;
+}
+QTextEdit#editorTextEdit QScrollBar:vertical {
+    background-color: transparent;
+    width: 6px;
+    border-radius: 3px;
+}
+QTextEdit#editorTextEdit QScrollBar::handle:vertical {
+    background-color: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    min-height: 40px;
+}
+QTextEdit#editorTextEdit QScrollBar::handle:vertical:hover {
+    background-color: rgba(255,255,255,0.15);
+}
+
+/* ===== 左侧面板卡片 ===== */
+QFrame#leftPanel {
+    background-color: rgba(10,12,17,0.4);
+    border: none;
+    border-right: 1px solid rgba(255,255,255,0.04);
+}
+
+/* ===== AI助手按钮（带图标） ===== */
+QPushButton#btnGenOutline, QPushButton#btnWorldBuild, QPushButton#btnCharacter,
+QPushButton#btnContinueWrite, QPushButton#btnPolish, QPushButton#btnDialogue {
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #EAECEF;
+}
+QPushButton#btnGenOutline:hover, QPushButton#btnWorldBuild:hover, QPushButton#btnCharacter:hover,
+QPushButton#btnContinueWrite:hover, QPushButton#btnPolish:hover, QPushButton#btnDialogue:hover {
+    background-color: rgba(255,255,255,0.04);
+}
+
+/* ===== 新建章节按钮 ===== */
+QPushButton#btnNewChapter {
+    background-color: rgba(77,124,254,0.15);
+    color: #4D7CFE;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+}
+QPushButton#btnNewChapter:hover {
+    background-color: rgba(77,124,254,0.25);
+}
+
+/* ===== 标签按钮 ===== */
+QPushButton#btnWorldForce, QPushButton#btnWorldMap, QPushButton#btnWorldPower,
+QPushButton#btnCharCard, QPushButton#btnRelationNet {
+    background-color: rgba(40,45,51,0.4);
+    color: #848E9C;
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 6px;
+    font-size: 12px;
+    padding: 0 12px;
+    height: 32px;
+}
+QPushButton#btnWorldForce:hover, QPushButton#btnWorldMap:hover, QPushButton#btnWorldPower:hover,
+QPushButton#btnCharCard:hover, QPushButton#btnRelationNet:hover {
+    background-color: rgba(60,65,71,0.6);
+    color: #EAECEF;
+    border-color: rgba(255,255,255,0.08);
+}
+
+/* ===== 章节列表 ===== */
+QListWidget#chapterList {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    outline: none;
+    show-decoration-selected: 0;
+}
+QListWidget#chapterList::item {
+    background-color: transparent;
+    color: transparent;
+}
+QListWidget#chapterList::item:hover {
+    background-color: transparent;
+}
+QListWidget#chapterList::item:selected {
+    background-color: transparent;
+    color: transparent;
+}
+QListWidget#chapterList::item:selected:active {
+    background-color: transparent;
+    color: transparent;
+}
+QListWidget#chapterList::item:selected:!active {
+    background-color: transparent;
+    color: transparent;
+}
+QListWidget#chapterList QScrollBar:vertical {
+    background-color: transparent;
+    width: 4px;
+    margin: 0;
+}
+QListWidget#chapterList QScrollBar::handle:vertical {
+    background-color: rgba(255,255,255,0.12);
+    border-radius: 2px;
+    min-height: 30px;
+}
+QListWidget#chapterList QScrollBar::handle:vertical:hover {
+    background-color: rgba(255,255,255,0.2);
+}
+QListWidget#chapterList QScrollBar::add-line:vertical,
+QListWidget#chapterList QScrollBar::sub-line:vertical {
+    height: 0;
+    background: none;
+}
+QListWidget#chapterList QScrollBar::add-page:vertical,
+QListWidget#chapterList QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+/* ===== 输入框 ===== */
+QLineEdit#outlineInput {
+    background-color: rgba(10,14,23,0.8);
+    color: #EAECEF;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    font-size: 12px;
+    padding: 0 12px;
+    height: 36px;
+}
+QLineEdit#outlineInput:focus {
+    border-color: #4D7CFE;
+    box-shadow: 0 0 0 3px rgba(77,124,254,0.1);
+}
+QLineEdit#outlineInput::placeholder {
+    color: #848E9C;
+    opacity: 0.5;
+}
+
+/* ===== 大纲生成按钮 ===== */
+QPushButton#btnGenerateOutline {
+    background-color: #4D7CFE;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 16px;
+    height: 40px;
+}
+QPushButton#btnGenerateOutline:hover { background-color: #3D6CF0; }
+QPushButton#btnGenerateOutline:pressed { background-color: #3560E0; }
+
+/* ===== 状态栏 ===== */
+QFrame#statusBar {
+    background-color: rgba(20,24,32,0.5);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 8px;
+}
+
+/* ===== 分割线 ===== */
+QFrame[frameShape="4"] {
+    background-color: rgba(255,255,255,0.06);
+}
+
+/* ===== 顶部标题 ===== */
+QLabel#pageTitle {
+    color: #EAECEF;
+    font-size: 22px;
+    font-weight: 700;
+}
+QLabel#pageSubtitle {
+    color: #848E9C;
+    font-size: 13px;
+}
+
+/* ===== 分割器手柄 ===== */
+QSplitter::handle {
+    background-color: rgba(255,255,255,0.04);
+}
+
+/* ===== 滚动区域 ===== */
+QScrollArea#rightScrollArea {
+    background-color: transparent;
+    border: none;
+}
+QScrollArea#rightScrollArea &gt; QWidget &gt; QWidget {
+    background-color: transparent;
+}
+QScrollArea#rightScrollArea QScrollBar:vertical {
+    background-color: transparent;
+    width: 6px;
+    border-radius: 3px;
+}
+QScrollArea#rightScrollArea QScrollBar::handle:vertical {
+    background-color: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    min-height: 40px;
+}
+QScrollArea#rightScrollArea QScrollBar::handle:vertical:hover {
+    background-color: rgba(255,255,255,0.15);
+}
+
+/* ===== 左侧滚动区域 ===== */
+QScrollArea#leftScrollArea {
+    background-color: transparent;
+    border: none;
+}
+QScrollArea#leftScrollArea &gt; QWidget &gt; QWidget {
+    background-color: transparent;
+}
+QScrollArea#leftScrollArea QScrollBar:vertical {
+    background-color: transparent;
+    width: 4px;
+    border-radius: 2px;
+}
+QScrollArea#leftScrollArea QScrollBar::handle:vertical {
+    background-color: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    min-height: 30px;
+}
+   </string>
+  </property>
+
+  <layout class="QHBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+
+   <!-- 左右分割器 -->
+   <item>
+    <widget class="QSplitter" name="mainSplitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="handleWidth">
+      <number>2</number>
+     </property>
+
+     <!-- ========== 左侧写作辅助面板 ========== -->
+     <widget class="QFrame" name="leftPanel">
+      <property name="minimumSize">
+       <size>
+        <width>280</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>320</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <layout class="QVBoxLayout" name="leftOuterLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+
+       <item>
+        <widget class="QScrollArea" name="leftScrollArea">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="verticalScrollBarPolicy">
+          <enum>Qt::ScrollBarAsNeeded</enum>
+         </property>
+         <property name="horizontalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="leftScrollContent">
+          <layout class="QVBoxLayout" name="leftInnerLayout">
+           <property name="spacing">
+            <number>12</number>
+           </property>
+           <property name="leftMargin">
+            <number>16</number>
+           </property>
+           <property name="topMargin">
+            <number>16</number>
+           </property>
+           <property name="rightMargin">
+            <number>16</number>
+           </property>
+           <property name="bottomMargin">
+            <number>16</number>
+           </property>
+
+           <!-- AI 创作助手标题 -->
+           <item>
+            <widget class="QLabel" name="aiAssistantTitle">
+             <property name="text">
+              <string>AI 创作助手</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #4D7CFE; font-size: 14px; font-weight: 600; padding-bottom: 8px;</string>
+             </property>
+            </widget>
+           </item>
+
+           <!-- AI 功能按钮（带图标） -->
+           <item>
+            <widget class="QPushButton" name="btnGenOutline">
+             <property name="minimumHeight">
+              <number>52</number>
+             </property>
+             <property name="text">
+              <string>生成大纲
+输入题材 / 设定自动生成</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">
+QPushButton#btnGenOutline {
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    padding: 10px 12px;
+    color: #EAECEF;
+    font-size: 13px;
+}
+QPushButton#btnGenOutline:hover {
+    background-color: rgba(255,255,255,0.04);
+}
+              </string>
+             </property>
+            </widget>
+           </item>
+
+           <item>
+            <widget class="QPushButton" name="btnWorldBuild">
+             <property name="minimumHeight">
+              <number>52</number>
+             </property>
+             <property name="text">
+              <string>世界观构建
+势力 · 地图 · 力量体系</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">
+QPushButton#btnWorldBuild {
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    padding: 10px 12px;
+    color: #EAECEF;
+    font-size: 13px;
+}
+QPushButton#btnWorldBuild:hover {
+    background-color: rgba(255,255,255,0.04);
+}
+              </string>
+             </property>
+            </widget>
+           </item>
+
+           <item>
+            <widget class="QPushButton" name="btnCharacter">
+             <property name="minimumHeight">
+              <number>52</number>
+             </property>
+             <property name="text">
+              <string>角色卡
+人物档案 + 关系网</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">
+QPushButton#btnCharacter {
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    padding: 10px 12px;
+    color: #EAECEF;
+    font-size: 13px;
+}
+QPushButton#btnCharacter:hover {
+    background-color: rgba(255,255,255,0.04);
+}
+              </string>
+             </property>
+            </widget>
+           </item>
+
+           <!-- 分隔线 -->
+           <item>
+            <widget class="QFrame" name="divider1">
+             <property name="frameShape">
+              <enum>QFrame::HLine</enum>
+             </property>
+             <property name="maximumHeight">
+              <number>1</number>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: rgba(255,255,255,0.04);</string>
+             </property>
+            </widget>
+           </item>
+
+           <!-- 写作辅助区块 -->
+           <item>
+            <widget class="QLabel" name="assistSectionTitle">
+             <property name="text">
+              <string>写作辅助</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #848E9C; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;</string>
+             </property>
+            </widget>
+           </item>
+
+           <item>
+            <widget class="QPushButton" name="btnContinueWrite">
+             <property name="minimumHeight">
+              <number>52</number>
+             </property>
+             <property name="text">
+              <string>智能续写
+基于上文自动续写</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">
+QPushButton#btnContinueWrite {
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    padding: 10px 12px;
+    color: #EAECEF;
+    font-size: 13px;
+}
+QPushButton#btnContinueWrite:hover {
+    background-color: rgba(255,255,255,0.04);
+}
+              </string>
+             </property>
+            </widget>
+           </item>
+
+           <item>
+            <widget class="QPushButton" name="btnPolish">
+             <property name="minimumHeight">
+              <number>52</number>
+             </property>
+             <property name="text">
+              <string>润色优化
+提升文笔流畅度</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">
+QPushButton#btnPolish {
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    padding: 10px 12px;
+    color: #EAECEF;
+    font-size: 13px;
+}
+QPushButton#btnPolish:hover {
+    background-color: rgba(255,255,255,0.04);
+}
+              </string>
+             </property>
+            </widget>
+           </item>
+
+           <item>
+            <widget class="QPushButton" name="btnDialogue">
+             <property name="minimumHeight">
+              <number>52</number>
+             </property>
+             <property name="text">
+              <string>对话生成
+角色风格化对话</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">
+QPushButton#btnDialogue {
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    padding: 10px 12px;
+    color: #EAECEF;
+    font-size: 13px;
+}
+QPushButton#btnDialogue:hover {
+    background-color: rgba(255,255,255,0.04);
+}
+              </string>
+             </property>
+            </widget>
+           </item>
+
+           <!-- 分隔线 -->
+           <item>
+            <widget class="QFrame" name="divider2">
+             <property name="frameShape">
+              <enum>QFrame::HLine</enum>
+             </property>
+             <property name="maximumHeight">
+              <number>1</number>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: rgba(255,255,255,0.04);</string>
+             </property>
+            </widget>
+           </item>
+
+           <!-- 章节列表区块 -->
+           <item>
+            <layout class="QHBoxLayout" name="chapterHeaderLayout">
+             <item>
+              <widget class="QLabel" name="chapterSectionTitle">
+               <property name="text">
+                <string>章节列表</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">color: #848E9C; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="chapterHeaderSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btnNewChapter">
+               <property name="text">
+                <string>+</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton#btnNewChapter {
+    background-color: rgba(77,124,254,0.15);
+    color: #4D7CFE;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+}
+QPushButton#btnNewChapter:hover {
+    background-color: rgba(77,124,254,0.25);
+}</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+
+           <!-- 新建章节大按钮（空状态时显示） -->
+           <item>
+            <widget class="QPushButton" name="btnNewChapterBig">
+             <property name="minimumHeight">
+              <number>44</number>
+             </property>
+             <property name="text">
+              <string>+  新建章节</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QPushButton#btnNewChapterBig {
+    background-color: rgba(30, 35, 41, 0.6);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    color: #848E9C;
+    font-size: 13px;
+    padding: 10px;
+}
+QPushButton#btnNewChapterBig:hover {
+    background-color: rgba(40, 45, 51, 0.8);
+    border-color: rgba(255,255,255,0.1);
+    color: #EAECEF;
+}</string>
+             </property>
+            </widget>
+           </item>
+
+           <!-- 章节列表 -->
+           <item>
+            <widget class="QListWidget" name="chapterList">
+             <property name="maximumHeight">
+              <number>400</number>
+             </property>
+            </widget>
+           </item>
+
+           <!-- 底部弹性空间 -->
+           <item>
+            <spacer name="leftSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+            </spacer>
+           </item>
+
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+
+     <!-- ========== 右侧编辑区 ========== -->
+     <widget class="QWidget" name="rightPanel">
+      <layout class="QVBoxLayout" name="rightLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+
+       <!-- 顶部标题栏 -->
+       <item>
+        <widget class="QFrame" name="headerFrame">
+         <property name="minimumHeight">
+          <number>64</number>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QFrame#headerFrame {
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}</string>
+         </property>
+         <layout class="QHBoxLayout" name="headerLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>20</number>
+          </property>
+          <property name="topMargin">
+           <number>12</number>
+          </property>
+          <property name="rightMargin">
+           <number>20</number>
+          </property>
+          <property name="bottomMargin">
+           <number>12</number>
+          </property>
+
+          <!-- 左侧标题 -->
+          <item>
+           <widget class="QWidget" name="headerLeft">
+            <layout class="QVBoxLayout" name="headerLeftLayout">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>12</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>12</number>
+             </property>
+
+             <item>
+              <widget class="QLabel" name="pageTitle">
+               <property name="text">
+                <string>速文创作</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="pageSubtitle">
+               <property name="text">
+                <string>AI 辅助网文写作工具，舒适排版 + AI 大纲生成</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+
+          <!-- 弹性空间 -->
+          <item>
+           <spacer name="headerSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </spacer>
+          </item>
+
+          <!-- 右侧按钮 -->
+          <item>
+           <widget class="QWidget" name="headerRight">
+            <layout class="QHBoxLayout" name="headerRightLayout">
+             <property name="spacing">
+              <number>10</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>12</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>12</number>
+             </property>
+
+             <item>
+              <widget class="QPushButton" name="btnOpenFile">
+               <property name="text">
+                <string>打开文件</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btnNewTask">
+               <property name="text">
+                <string>新建任务</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+
+       <!-- 工具栏区域 -->
+       <item>
+        <widget class="QFrame" name="toolbarFrame">
+         <property name="styleSheet">
+          <string notr="true">QFrame#toolbarFrame {
+    background-color: rgba(20,24,32,0.4);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 10px;
+}</string>
+         </property>
+         <layout class="QVBoxLayout" name="toolbarOuterLayout">
+          <property name="spacing">
+           <number>8</number>
+          </property>
+          <property name="leftMargin">
+           <number>14</number>
+          </property>
+          <property name="topMargin">
+           <number>10</number>
+          </property>
+          <property name="rightMargin">
+           <number>14</number>
+          </property>
+          <property name="bottomMargin">
+           <number>10</number>
+          </property>
+
+          <!-- 第一行：格式工具 -->
+          <item>
+           <layout class="QHBoxLayout" name="toolbarRow1">
+            <property name="spacing">
+             <number>6</number>
+            </property>
+
+            <!-- 字体选择 -->
+            <item>
+             <widget class="QComboBox" name="fontCombo">
+              <property name="minimumSize">
+               <size>
+                <width>80</width>
+                <height>0</height>
+               </size>
+              </property>
+              <item>
+               <property name="text">
+                <string>字体</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>微软雅黑</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>宋体</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>黑体</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>楷体</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>仿宋</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+
+            <!-- 字号选择 -->
+            <item>
+             <widget class="QComboBox" name="sizeCombo">
+              <property name="minimumSize">
+               <size>
+                <width>70</width>
+                <height>0</height>
+               </size>
+              </property>
+              <item>
+               <property name="text">
+                <string>字号</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>12</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>14</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>16</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>18</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>20</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>24</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+
+            <!-- 格式按钮 -->
+            <item>
+             <widget class="QPushButton" name="btnBold">
+              <property name="text">
+               <string>B</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="toolTip">
+               <string>粗体</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnItalic">
+              <property name="text">
+               <string>I</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="toolTip">
+               <string>斜体</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnUnderline">
+              <property name="text">
+               <string>U</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="toolTip">
+               <string>下划线</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnStrike">
+              <property name="text">
+               <string>S</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="toolTip">
+               <string>删除线</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">text-decoration: line-through;</string>
+              </property>
+             </widget>
+            </item>
+
+            <!-- 颜色按钮 -->
+            <item>
+             <widget class="QPushButton" name="btnTextColor">
+              <property name="text">
+               <string>A</string>
+              </property>
+              <property name="toolTip">
+               <string>文字颜色</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnBgColor">
+              <property name="text">
+               <string>A</string>
+              </property>
+              <property name="toolTip">
+               <string>背景颜色</string>
+              </property>
+             </widget>
+            </item>
+
+            <!-- 对齐方式 -->
+            <item>
+             <widget class="QPushButton" name="btnAlignLeft">
+              <property name="text">
+               <string>⫷</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="toolTip">
+               <string>左对齐</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnAlignCenter">
+              <property name="text">
+               <string>⇔</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="toolTip">
+               <string>居中对齐</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnAlignRight">
+              <property name="text">
+               <string>⫸</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="toolTip">
+               <string>右对齐</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnAlignJustify">
+              <property name="text">
+               <string>☰</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="toolTip">
+               <string>两端对齐</string>
+              </property>
+             </widget>
+            </item>
+
+            <!-- 列表 -->
+            <item>
+             <widget class="QPushButton" name="btnList">
+              <property name="text">
+               <string>•</string>
+              </property>
+              <property name="toolTip">
+               <string>无序列表</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnOrderedList">
+              <property name="text">
+               <string>#</string>
+              </property>
+              <property name="toolTip">
+               <string>有序列表</string>
+              </property>
+             </widget>
+            </item>
+
+            <!-- 缩进 -->
+            <item>
+             <widget class="QPushButton" name="btnOutdent">
+              <property name="text">
+               <string>⇤</string>
+              </property>
+              <property name="toolTip">
+               <string>减少缩进</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnIndent">
+              <property name="text">
+               <string>⇥</string>
+              </property>
+              <property name="toolTip">
+               <string>增加缩进</string>
+              </property>
+             </widget>
+            </item>
+
+            <!-- 弹性空间 -->
+            <item>
+             <spacer name="row1Spacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </spacer>
+            </item>
+
+            <!-- 行距 -->
+            <item>
+             <widget class="QComboBox" name="lineSpacingCombo">
+              <property name="minimumSize">
+               <size>
+                <width>80</width>
+                <height>0</height>
+               </size>
+              </property>
+              <item>
+               <property name="text">
+                <string>舒适 1.8x</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>紧凑 1.5x</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>宽松 2.0x</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+
+            <!-- 撤销/重做 -->
+            <item>
+             <widget class="QPushButton" name="btnUndo">
+              <property name="text">
+               <string>↶</string>
+              </property>
+              <property name="toolTip">
+               <string>撤销</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnRedo">
+              <property name="text">
+               <string>↷</string>
+              </property>
+              <property name="toolTip">
+               <string>重做</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+
+          <!-- 第二行：操作按钮 -->
+          <item>
+           <layout class="QHBoxLayout" name="toolbarRow2">
+            <property name="spacing">
+             <number>6</number>
+            </property>
+
+            <!-- 字数统计 -->
+            <item>
+             <widget class="QLabel" name="wordCountLabel">
+              <property name="text">
+               <string>&lt;span style="color:#4D7CFE;font-weight:600;"&gt;0&lt;/span&gt; 字 · 约 0 页</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: #848E9C; font-size: 12px; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 0 10px; height: 28px;</string>
+              </property>
+             </widget>
+            </item>
+
+            <!-- 导出下拉 -->
+            <item>
+             <widget class="QComboBox" name="exportCombo">
+              <property name="minimumSize">
+               <size>
+                <width>80</width>
+                <height>0</height>
+               </size>
+              </property>
+              <item>
+               <property name="text">
+                <string>常规导出</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>手机模式</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+
+            <!-- 弹性空间 -->
+            <item>
+             <spacer name="row2Spacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </spacer>
+            </item>
+
+            <!-- 手机预览 -->
+            <item>
+             <widget class="QPushButton" name="btnMobilePreview">
+              <property name="text">
+               <string>手机预览</string>
+              </property>
+             </widget>
+            </item>
+
+            <!-- 背景选择 -->
+            <item>
+             <widget class="QComboBox" name="bgThemeCombo">
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <item>
+               <property name="text">
+                <string>背景选择</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>默认 (白底黑字)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>柔和护眼 (黄底黑字)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>夜间沉浸 (黑底灰字)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>极简自然 (牛皮纸)</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+
+       <!-- 编辑器区域 -->
+       <item>
+        <widget class="QTextEdit" name="editorTextEdit">
+         <property name="placeholderText">
+          <string>开始你的故事...
+
+· 富文本格式（加粗/斜体/下划线/颜色）
+· 字体和字号调节
+· 字数统计
+· 手机预览模式（点击右上角）
+· AI 续写：选中文字后点击「续写」
+· Ctrl+S 快速保存
+
+────────────────────────
+示例开头： 夜色如墨，暴雨倾盆而下。
+
+林远站在断崖边，任由雨水冲刷着他满是血污的脸。
+身后，曾经辉煌的林家大院此刻已是一片火海，喊杀声渐渐平息，取而代之的是一片死寂。
+
+「三年了......」他喃喃自语，握紧了手中那枚残破的玉佩，「我终于等到了这一天。」</string>
+         </property>
+         <property name="acceptRichText">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+
+       <!-- 底部状态栏 -->
+       <item>
+        <widget class="QFrame" name="statusBar">
+         <layout class="QHBoxLayout" name="statusLayout">
+          <property name="spacing">
+           <number>10</number>
+          </property>
+          <property name="leftMargin">
+           <number>14</number>
+          </property>
+          <property name="topMargin">
+           <number>6</number>
+          </property>
+          <property name="rightMargin">
+           <number>14</number>
+          </property>
+          <property name="bottomMargin">
+           <number>6</number>
+          </property>
+
+          <!-- 字数统计 -->
+          <item>
+           <widget class="QLabel" name="statusWordCount">
+            <property name="text">
+             <string>&lt;span style="color:#4D7CFE;font-weight:600;"&gt;0&lt;/span&gt; 字</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">color: #848E9C; font-size: 12px;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="statusDot1">
+            <property name="text">
+             <string>·</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">color: #848E9C; opacity: 0.3;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="statusPageCount">
+            <property name="text">
+             <string>约 &lt;span style="font-weight:600;"&gt;0&lt;/span&gt; 页</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">color: #848E9C; font-size: 12px;</string>
+            </property>
+           </widget>
+          </item>
+
+          <!-- 弹性空间 -->
+          <item>
+           <spacer name="statusSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </spacer>
+          </item>
+
+          <!-- 文档名 -->
+          <item>
+           <widget class="QLabel" name="statusDocName">
+            <property name="text">
+             <string>未命名文档</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">color: #848E9C; font-size: 12px;</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

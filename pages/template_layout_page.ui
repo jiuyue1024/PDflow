@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TemplateLayoutPage</class>
+ <widget class="QWidget" name="TemplateLayoutPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>820</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>960</width>
+    <height>600</height>
+   </size>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#TemplateLayoutPage {
+    background-color: #0B0E11;
+}
+
+/* ===== 页面标题 ===== */
+QLabel#pageTitle {
+    color: #EAECEF;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+/* ===== 模板卡片 ===== */
+QFrame#card {
+    background-color: #1A1A22;
+    border: 1px solid #2B3139;
+    border-radius: 8px;
+}
+
+QFrame#card:hover {
+    background-color: #1E2330;
+    border: 1px solid #4D7CFE;
+}
+
+/* ===== 模板图标占位 ===== */
+QLabel#cardIcon {
+    font-size: 36px;
+}
+
+/* ===== 模板名称 ===== */
+QLabel#cardName {
+    color: #EAECEF;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* ===== 模板描述 ===== */
+QLabel#cardDesc {
+    color: #848E9C;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 12px;
+}
+
+/* ===== 类型标签 ===== */
+QLabel#cardTypeLabel {
+    color: #4D7CFE;
+    background-color: rgba(77, 124, 254, 0.12);
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 4px;
+}
+
+/* ===== 底部状态文字 ===== */
+QLabel#footerLabel {
+    color: #848E9C;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 13px;
+}
+
+/* ===== 空状态提示 ===== */
+QLabel#emptyHint {
+    color: #4A4B56;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 15px;
+}
+
+/* ===== 弹窗按钮 ===== */
+QPushButton#dialogCancelBtn {
+    background-color: #1E2329;
+    color: #EAECEF;
+    border: 1px solid #2B3139;
+    border-radius: 6px;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 14px;
+    padding: 8px 24px;
+    min-height: 36px;
+}
+
+QPushButton#dialogCancelBtn:hover {
+    background-color: #282D35;
+    border-color: #3D4450;
+}
+
+QPushButton#dialogStartBtn {
+    background-color: #4D7CFE;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 6px;
+    font-family: &quot;Inter&quot;, &quot;微软雅黑&quot;;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 24px;
+    min-height: 36px;
+}
+
+QPushButton#dialogStartBtn:hover {
+    background-color: #3D6CF0;
+}
+
+QPushButton#dialogStartBtn:pressed {
+    background-color: #3560E0;
+}
+
+/* ===== 滚动区域 ===== */
+QScrollArea#templateScrollArea {
+    background-color: transparent;
+    border: none;
+}
+
+QScrollArea#templateScrollArea &gt; QWidget &gt; QWidget {
+    background-color: transparent;
+}
+
+QScrollArea#templateScrollArea QScrollBar:vertical {
+    background-color: #0B0E11;
+    width: 8px;
+    border-radius: 4px;
+}
+
+QScrollArea#templateScrollArea QScrollBar::handle:vertical {
+    background-color: #2B3139;
+    border-radius: 4px;
+    min-height: 40px;
+}
+
+QScrollArea#templateScrollArea QScrollBar::handle:vertical:hover {
+    background-color: #3D4450;
+}
+
+/* ===== 滚动区域内部容器 ===== */
+QWidget#scrollContent {
+    background-color: transparent;
+}
+</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>16</number>
+   </property>
+   <property name="leftMargin">
+    <number>24</number>
+   </property>
+   <property name="topMargin">
+    <number>24</number>
+   </property>
+   <property name="rightMargin">
+    <number>24</number>
+   </property>
+   <property name="bottomMargin">
+    <number>24</number>
+   </property>
+
+   <!-- 顶部标题 -->
+   <item>
+    <widget class="QLabel" name="pageTitle">
+     <property name="text">
+      <string>模板排版</string>
+     </property>
+    </widget>
+   </item>
+
+   <!-- 模板列表滚动区域 -->
+   <item>
+    <widget class="QScrollArea" name="templateScrollArea">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <property name="horizontalScrollBarPolicy">
+      <enum>Qt::ScrollBarAlwaysOff</enum>
+     </property>
+     <widget class="QWidget" name="scrollContent">
+      <layout class="QVBoxLayout" name="scrollContentLayout">
+       <property name="spacing">
+        <number>16</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+
+       <!-- 模板网格容器（运行时动态填充） -->
+       <item>
+        <widget class="QWidget" name="templateGridWidget">
+         <layout class="QVBoxLayout" name="templateGridOuterLayout">
+          <property name="spacing">
+           <number>16</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+         </layout>
+        </widget>
+       </item>
+
+       <!-- 底部弹性空间 -->
+       <item>
+        <spacer name="scrollBottomSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+
+   <!-- 底部状态栏 -->
+   <item>
+    <widget class="QLabel" name="footerLabel">
+     <property name="text">
+      <string>共 0 个可用模板</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

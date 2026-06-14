@@ -1,0 +1,1084 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SettingsPage</class>
+ <widget class="QWidget" name="settingsPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>780</width>
+    <height>640</height>
+   </rect>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#settingsPage { background-color: #0B0E11; }</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>24</number>
+   </property>
+   <property name="topMargin">
+    <number>24</number>
+   </property>
+   <property name="rightMargin">
+    <number>24</number>
+   </property>
+   <property name="bottomMargin">
+    <number>24</number>
+   </property>
+
+   <!-- 页面标题 -->
+   <item>
+    <layout class="QHBoxLayout" name="pageTitleLayout">
+     <property name="spacing">
+      <number>10</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="lblPageIcon">
+       <property name="minimumSize">
+        <size>
+         <width>28</width>
+         <height>28</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>28</width>
+         <height>28</height>
+        </size>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QLabel#lblPageIcon {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #4D7CFE, stop:1 #6B8FFF);
+    border-radius: 6px;
+    color: #FFFFFF;
+    font-size: 14px;
+}</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="lblPageTitle">
+       <property name="text">
+        <string>设置</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color: #EAECEF; font-size: 24px; font-weight: 700; background: transparent; border: none; padding: 0; letter-spacing: -1px;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+
+   <!-- 滚动区域 -->
+   <item>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAsNeeded</enum>
+     </property>
+     <property name="horizontalScrollBarPolicy">
+      <enum>Qt::ScrollBarAlwaysOff</enum>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QScrollArea { background: transparent; border: none; }
+QScrollArea#scrollArea { background: transparent; border: none; }
+QScrollArea &gt; QWidget { background: #0B0E11; border: none; }</string>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollContent">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QWidget#scrollContent { background-color: #0B0E11; }</string>
+      </property>
+      <layout class="QVBoxLayout" name="scrollLayout">
+       <property name="spacing">
+        <number>16</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>16</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>16</number>
+       </property>
+
+       <!-- ═══════════ 通用 ═══════════ -->
+       <!-- 分类标题：通用 -->
+       <item>
+        <layout class="QHBoxLayout" name="sectionGeneralTitleLayout">
+         <property name="spacing">
+          <number>8</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="sectionBar">
+           <property name="minimumSize">
+            <size>
+             <width>3</width>
+             <height>14</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>3</width>
+             <height>14</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background-color: #4D7CFE; border-radius: 2px;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lblSectionGeneral">
+           <property name="text">
+            <string>通用</string>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">color: #5E6673; font-size: 12px; font-weight: 600; background: transparent; border: none; padding: 0; letter-spacing: 0.8px;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="generalTitleSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+
+       <!-- 通用设置卡片 -->
+       <item>
+        <widget class="QFrame" name="generalCard">
+         <property name="styleSheet">
+          <string notr="true">QFrame#generalCard {
+    background-color: #1A1A22;
+    border: 1px solid #2B3139;
+    border-radius: 12px;
+}</string>
+         </property>
+         <layout class="QVBoxLayout" name="generalCardLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+
+          <!-- 语言设置行 -->
+          <item>
+           <widget class="QFrame" name="rowLanguage">
+            <property name="styleSheet">
+             <string notr="true">QFrame#rowLanguage {
+    background-color: #0B0E11;
+    border-bottom: 1px solid #2B3139;
+    padding: 16px 20px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}</string>
+            </property>
+            <layout class="QHBoxLayout" name="rowLanguageLayout">
+             <property name="spacing">
+              <number>12</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <layout class="QVBoxLayout" name="langLabelLayout">
+               <property name="spacing">
+                <number>2</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="lblLanguage">
+                 <property name="text">
+                  <string>语言</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">color: #EAECEF; font-size: 14px; font-weight: 500; background: transparent; border: none; padding: 0;</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="lblLanguageHint">
+                 <property name="text">
+                  <string>界面显示语言</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">color: #5E6673; font-size: 12px; background: transparent; border: none; padding: 0;</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <spacer name="langSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboLanguage">
+               <property name="minimumSize">
+                <size>
+                 <width>140</width>
+                 <height>32</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>160</width>
+                 <height>32</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QComboBox {
+    background-color: #14141A;
+    color: #EAECEF;
+    border: 1px solid #2B3139;
+    border-radius: 8px;
+    padding: 0 28px 0 12px;
+    font-size: 13px;
+}
+QComboBox:hover {
+    border: 1px solid #3D4450;
+}
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 24px;
+    border: none;
+}
+QComboBox::down-arrow {
+    width: 0;
+    height: 0;
+    border: 5px solid transparent;
+    border-top-color: #848E9C;
+    margin-right: 4px;
+}
+QComboBox QAbstractItemView {
+    background-color: #14141A;
+    color: #EAECEF;
+    border: 1px solid #2B3139;
+    border-radius: 8px;
+    selection-background-color: #1A1A22;
+    selection-color: #4D7CFE;
+    padding: 4px;
+    outline: none;
+}
+QComboBox QAbstractItemView::item {
+    min-height: 28px;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+QComboBox QAbstractItemView::item:hover {
+    background-color: #1A1A22;
+    color: #4D7CFE;
+}</string>
+               </property>
+               <item>
+                <property name="text">
+                 <string>简体中文</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>繁體中文</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>English</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+
+          <!-- 开发者模式行 -->
+          <item>
+           <widget class="QFrame" name="rowDeveloper">
+            <property name="styleSheet">
+             <string notr="true">QFrame#rowDeveloper {
+    background-color: #0B0E11;
+    padding: 16px 20px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}</string>
+            </property>
+            <layout class="QHBoxLayout" name="rowDeveloperLayout">
+             <property name="spacing">
+              <number>12</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <layout class="QVBoxLayout" name="devLabelLayout">
+               <property name="spacing">
+                <number>2</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="lblDeveloper">
+                 <property name="text">
+                  <string>开发者模式</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">color: #EAECEF; font-size: 14px; font-weight: 500; background: transparent; border: none; padding: 0;</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="lblDeveloperHint">
+                 <property name="text">
+                  <string>显示「速文创作」等实验性功能</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">color: #5E6673; font-size: 12px; background: transparent; border: none; padding: 0;</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <spacer name="devSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="chkDeveloperMode">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QCheckBox { spacing: 0px; }
+QCheckBox::indicator { width: 20px; height: 20px; }</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+
+         </layout>
+        </widget>
+       </item>
+
+       <!-- ═══════════ 输出 ═══════════ -->
+       <!-- 分类标题：输出 -->
+       <item>
+        <layout class="QHBoxLayout" name="sectionOutputTitleLayout">
+         <property name="spacing">
+          <number>8</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="sectionBar2">
+           <property name="minimumSize">
+            <size>
+             <width>3</width>
+             <height>14</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>3</width>
+             <height>14</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background-color: #4D7CFE; border-radius: 2px;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lblSectionOutput">
+           <property name="text">
+            <string>输出</string>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">color: #5E6673; font-size: 12px; font-weight: 600; background: transparent; border: none; padding: 0; letter-spacing: 0.8px;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="outputTitleSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+
+       <!-- 输出设置卡片 -->
+       <item>
+        <widget class="QFrame" name="outputCard">
+         <property name="styleSheet">
+          <string notr="true">QFrame#outputCard {
+    background-color: #1A1A22;
+    border: 1px solid #2B3139;
+    border-radius: 12px;
+}</string>
+         </property>
+         <layout class="QVBoxLayout" name="outputCardLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+
+          <!-- 默认输出目录行 -->
+          <item>
+           <widget class="QFrame" name="rowOutputDir">
+            <property name="styleSheet">
+             <string notr="true">QFrame#rowOutputDir {
+    background-color: #0B0E11;
+    border-bottom: 1px solid #2B3139;
+    padding: 16px 20px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}</string>
+            </property>
+            <layout class="QHBoxLayout" name="rowOutputDirLayout">
+             <property name="spacing">
+              <number>12</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <layout class="QVBoxLayout" name="outputDirLabelLayout">
+               <property name="spacing">
+                <number>2</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="lblOutputDir">
+                 <property name="text">
+                  <string>默认输出目录</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">color: #EAECEF; font-size: 14px; font-weight: 500; background: transparent; border: none; padding: 0;</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="lblOutputDirHint">
+                 <property name="text">
+                  <string>处理后的文件默认保存位置</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">color: #5E6673; font-size: 12px; background: transparent; border: none; padding: 0;</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <spacer name="outputDirSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="outputDirInputLayout">
+               <property name="spacing">
+                <number>8</number>
+               </property>
+               <item>
+                <widget class="QLineEdit" name="editOutputDir">
+                 <property name="minimumSize">
+                  <size>
+                   <width>180</width>
+                   <height>32</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>260</width>
+                   <height>32</height>
+                  </size>
+                 </property>
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                 <property name="placeholderText">
+                  <string>输入文件所在目录</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
+    background-color: #14141A;
+    color: #EAECEF;
+    border: 1px solid #2B3139;
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 13px;
+}
+QLineEdit:hover {
+    border: 1px solid #3D4450;
+}</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="btnBrowseOutputDir">
+                 <property name="minimumSize">
+                  <size>
+                   <width>80</width>
+                   <height>32</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>80</width>
+                   <height>32</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>浏览...</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton {
+    background-color: #14141A;
+    color: #848E9C;
+    border: 1px solid #2B3139;
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 13px;
+}
+QPushButton:hover {
+    border-color: #3D4450;
+    color: #EAECEF;
+}</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
+
+          <!-- 文件名后缀行 -->
+          <item>
+           <widget class="QFrame" name="rowSuffix">
+            <property name="styleSheet">
+             <string notr="true">QFrame#rowSuffix {
+    background-color: #0B0E11;
+    padding: 16px 20px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}</string>
+            </property>
+            <layout class="QHBoxLayout" name="rowSuffixLayout">
+             <property name="spacing">
+              <number>12</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <layout class="QVBoxLayout" name="suffixLabelLayout">
+               <property name="spacing">
+                <number>2</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="lblSuffix">
+                 <property name="text">
+                  <string>文件名后缀</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">color: #EAECEF; font-size: 14px; font-weight: 500; background: transparent; border: none; padding: 0;</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="lblSuffixHint">
+                 <property name="text">
+                  <string>自动为输出文件添加后缀名</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">color: #5E6673; font-size: 12px; background: transparent; border: none; padding: 0;</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <spacer name="suffixSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="suffixInputLayout">
+               <property name="spacing">
+                <number>6</number>
+               </property>
+               <item>
+                <widget class="QLineEdit" name="editSuffix">
+                 <property name="minimumSize">
+                  <size>
+                   <width>80</width>
+                   <height>32</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>80</width>
+                   <height>32</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>_out</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignVCenter</set>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit {
+    background-color: #14141A;
+    color: #EAECEF;
+    border: 1px solid #2B3139;
+    border-radius: 8px;
+    padding: 0 8px;
+    font-size: 13px;
+    font-family: monospace;
+}
+QLineEdit:hover {
+    border: 1px solid #3D4450;
+}
+QLineEdit:focus {
+    border: 1px solid #4D7CFE;
+}</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="lblSuffixExt">
+                 <property name="text">
+                  <string>+ 扩展名</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">color: #5E6673; font-size: 12px; background: transparent; border: none; padding: 0;</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
+
+         </layout>
+        </widget>
+       </item>
+
+       <!-- ═══════════ 关于 ═══════════ -->
+       <!-- 分类标题：关于 -->
+       <item>
+        <layout class="QHBoxLayout" name="sectionAboutTitleLayout">
+         <property name="spacing">
+          <number>8</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="sectionBar3">
+           <property name="minimumSize">
+            <size>
+             <width>3</width>
+             <height>14</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>3</width>
+             <height>14</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background-color: #4D7CFE; border-radius: 2px;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lblSectionAbout">
+           <property name="text">
+            <string>关于</string>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">color: #5E6673; font-size: 12px; font-weight: 600; background: transparent; border: none; padding: 0; letter-spacing: 0.8px;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="aboutTitleSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+
+       <!-- 关于卡片 -->
+       <item>
+        <widget class="QFrame" name="aboutCard">
+         <property name="styleSheet">
+          <string notr="true">QFrame#aboutCard {
+    background-color: #1A1A22;
+    border: 1px solid #2B3139;
+    border-radius: 12px;
+    padding: 20px 24px;
+}</string>
+         </property>
+         <layout class="QHBoxLayout" name="aboutCardLayout">
+          <property name="spacing">
+           <number>16</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+
+          <!-- Logo -->
+          <item>
+           <widget class="QLabel" name="lblAboutIcon">
+            <property name="minimumSize">
+             <size>
+              <width>44</width>
+              <height>44</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>44</width>
+              <height>44</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QLabel#lblAboutIcon {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #4D7CFE, stop:1 #6B8FFF);
+    border-radius: 10px;
+    color: #FFFFFF;
+    font-size: 20px;
+}</string>
+            </property>
+           </widget>
+          </item>
+
+          <!-- 应用信息 -->
+          <item>
+           <layout class="QVBoxLayout" name="aboutInfoLayout">
+            <property name="spacing">
+             <number>3</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="lblAppName">
+              <property name="text">
+               <string>印流PDflow</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: #EAECEF; font-size: 15px; font-weight: 700; background: transparent; border: none; padding: 0;</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblAppVersion">
+              <property name="text">
+               <string>v1.1-beta · 2026.06.12</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: #848E9C; font-size: 12px; background: transparent; border: none; padding: 0;</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblAppDesc">
+              <property name="text">
+               <string>设计师专用的轻量级 PDF 工具箱</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: #5E6673; font-size: 11px; background: transparent; border: none; padding: 0;</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+
+          <item>
+           <spacer name="aboutInfoSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+
+          <!-- 操作按钮 -->
+          <item>
+           <layout class="QHBoxLayout" name="aboutBtnLayout">
+            <property name="spacing">
+             <number>8</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="btnCheckUpdate">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>检查更新</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+    background-color: transparent;
+    color: #848E9C;
+    border: 1px solid #2B3139;
+    border-radius: 8px;
+    padding: 0 14px;
+    font-size: 12px;
+    font-weight: 500;
+}
+QPushButton:hover {
+    border-color: #3D4450;
+    color: #EAECEF;
+}</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnFeedback">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>反馈</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+    background-color: transparent;
+    color: #848E9C;
+    border: 1px solid #2B3139;
+    border-radius: 8px;
+    padding: 0 14px;
+    font-size: 12px;
+    font-weight: 500;
+}
+QPushButton:hover {
+    border-color: #3D4450;
+    color: #EAECEF;
+}</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+
+         </layout>
+        </widget>
+       </item>
+
+       <!-- 底部提示 -->
+       <item>
+        <widget class="QLabel" name="lblFooterHint">
+         <property name="text">
+          <string>设置修改后自动保存 · 语言切换需重启生效</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">color: #4A4B56; font-size: 11px; background: transparent; border: none; padding: 8px 0;</string>
+         </property>
+        </widget>
+       </item>
+
+       <!-- 底部弹性空间 -->
+       <item>
+        <spacer name="spacerBottom">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+
+      </layout>
+     </widget>
+    </widget>
+   </item>
+
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

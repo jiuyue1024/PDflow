@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- 主色渐变：深蓝到亮蓝（和AI版一致） -->
+    <linearGradient id="mainGrad" x1="10%" y1="0%" x2="90%" y2="100%">
+      <stop offset="0%" style="stop-color:#2B6DE5;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#165DFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4090FF;stop-opacity:1" />
+    </linearGradient>
+    <!-- 浅蓝渐变：文档背景 -->
+    <linearGradient id="pageGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8F0FE;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D4E4FF;stop-opacity:1" />
+    </linearGradient>
+    <!-- S曲线渐变：深浅变化增加立体感 -->
+    <linearGradient id="curveGrad" x1="20%" y1="10%" x2="80%" y2="90%">
+      <stop offset="0%" style="stop-color:#3070E8;stop-opacity:1" />
+      <stop offset="35%" style="stop-color:#165DFF;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#2880F5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#52A8FF;stop-opacity:1" />
+    </linearGradient>
+    <!-- 折角深蓝 -->
+    <linearGradient id="cornerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3D85F0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#559AEF;stop-opacity:1" />
+    </linearGradient>
+    <!-- 柔和阴影 -->
+    <filter id="softShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#165DFF" flood-opacity="0.18"/>
+    </filter>
+    <!-- 内发光 -->
+    <filter id="innerGlow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
+      <feOffset in="blur" dx="0" dy="1" result="offsetBlur"/>
+      <feFlood flood-color="white" flood-opacity="0.4"/>
+      <feComposite in2="offsetBlur" operator="in" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- ===== 背景圆角文档底板（超圆润 squircle） ===== -->
+  <rect x="22" y="18" width="200" height="220" rx="44" ry="44"
+        fill="url(#pageGrad)" filter="url(#softShadow)"/>
+
+  <!-- 文档内边缘线（轻微，增加层次感） -->
+  <rect x="36" y="32" width="172" height="192" rx="32" ry="32"
+        fill="none" stroke="#C5D8F7" stroke-width="1" opacity="0.5"/>
+
+  <!-- ===== 折角（右上角，圆角处理） ===== -->
+  <path d="M 156 18
+           L 156 62
+           Q 156 74, 168 74
+           L 212 74
+           Q 222 74, 214 64
+           L 170 20
+           Q 162 12, 156 18 Z"
+        fill="url(#cornerGrad)"/>
+  <!-- 折角高光线 -->
+  <path d="M 160 24 L 160 58 
+           Q 160 68, 170 68 
+           L 204 68"
+        fill="none" stroke="white" stroke-width="1.5" opacity="0.35"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ===== 核心 S 形流动曲线（圆润版，模仿AI版的动态感） ===== -->
+  <g filter="url(#innerGlow)">
+    <!-- S曲线主体 - 粗细变化的圆润曲线 -->
+    <path d="M 34 178
+             C 34 140, 72 108, 114 112
+             C 166 117, 190 78, 218 50
+             C 228 39, 222 26, 210 22
+             C 198 18, 186 28, 184 40
+             C 180 60, 164 88, 128 96
+             C 82 106, 48 138, 46 176
+             C 44 204, 58 224, 86 230
+             C 118 236, 152 218, 172 192
+             C 188 172, 196 148, 194 126"
+          stroke="url(#curveGrad)" 
+          stroke-width="36" 
+          stroke-linecap="round" 
+          fill="none"
+          opacity="0.95"/>
+          
+    <!-- 高光层 - 让曲线更立体 -->
+    <path d="M 38 170
+             C 38 138, 72 114, 110 118
+             C 158 123, 182 88, 208 62"
+          stroke="white" 
+          stroke-width="8" 
+          stroke-linecap="round" 
+          fill="none"
+          opacity="0.2"/>
+  </g>
+
+  <!-- ===== 钢笔/笔尖图标（右下区域，圆润风格） ===== -->
+  <g transform="translate(168, 162) rotate(-35)">
+    <!-- 笔身 -->
+    <rect x="0" y="0" width="10" height="36" rx="5" ry="5" fill="#165DFF" opacity="0.85"/>
+    <!-- 笔身高光 -->
+    <rect x="6" y="4" width="2.5" height="28" rx="1.25" ry="1.25" fill="white" opacity="0.25"/>
+    <!-- 笔尖金属环 -->
+    <rect x="-2" y="33" width="14" height="5" rx="2.5" ry="2.5" fill="#2B6DE5" opacity="0.7"/>
+    <!-- 笔尖主体（圆润三角形） -->
+    <path d="M 0 38 
+             L 5 54 
+             Q 5 57, 3 56 
+             L 0 52
+             L -3 56
+             Q -5 57, -5 54 
+             Z" 
+          fill="#165DFF" opacity="0.9"/>
+    <!-- 笔尖高光点 -->
+    <circle cx="5" cy="47" r="1.5" fill="white" opacity="0.5"/>
+  </g>
+
+  <!-- ===== 装饰性细节 ===== -->
+  
+  <!-- 底部文档线条（暗示文字内容） -->
+  <rect x="52" y="196" width="64" height="6" rx="3" ry="3" fill="#B8CEE8" opacity="0.5"/>
+  <rect x="124" y="196" width="44" height="6" rx="3" ry="3" fill="#B8CEE8" opacity="0.35"/>
+  <rect x="176" y="196" width="28" height="6" rx="3" ry="3" fill="#B8CEE8" opacity="0.25"/>
+
+</svg>

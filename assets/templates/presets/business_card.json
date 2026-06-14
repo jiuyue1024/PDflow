@@ -1,0 +1,54 @@
+[
+  {
+    "id": "standard_business",
+    "name": "标准商务风",
+    "description": "蓝色装饰条 + 白底，经典商务名片",
+    "preview_color": "#4D7CFE",
+    "values": {
+      "theme_color": "#4D7CFE",
+      "bar_position": "left",
+      "bg_style": "white",
+      "bg_custom_color": "",
+      "bg_texture": "none"
+    }
+  },
+  {
+    "id": "modern_design",
+    "name": "现代设计感",
+    "description": "渐变背景 + 底部装饰条，时尚质感",
+    "preview_color": "#AF52DE",
+    "values": {
+      "theme_color": "#AF52DE",
+      "bar_position": "bottom",
+      "bg_style": "gradient_vertical",
+      "bg_custom_color": "",
+      "bg_texture": "dot"
+    }
+  },
+  {
+    "id": "minimalist",
+    "name": "极简主义",
+    "description": "无装饰条 + 纯白底，干净克制",
+    "preview_color": "#1D1D1F",
+    "values": {
+      "theme_color": "#1D1D1F",
+      "bar_position": "none",
+      "bg_style": "white",
+      "bg_custom_color": "",
+      "bg_texture": "none"
+    }
+  },
+  {
+    "id": "warm_orange",
+    "name": "暖阳活力",
+    "description": "橙色装饰条 + 浅灰底，活泼亲和",
+    "preview_color": "#FF9500",
+    "values": {
+      "theme_color": "#FF9500",
+      "bar_position": "left",
+      "bg_style": "light_gray",
+      "bg_custom_color": "",
+      "bg_texture": "none"
+    }
+  }
+]

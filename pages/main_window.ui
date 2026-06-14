@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="windowTitle">
+   <string>印流PDflow</string>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>820</height>
+   </rect>
+  </property>
+  <!-- 全局深色主题 -->
+  <property name="styleSheet">
+   <string>
+    QMainWindow {
+        background-color: #0B0E11;
+    }
+    QWidget#centralWidget {
+        background-color: #0B0E11;
+    }
+    QLabel#navTitle {
+        color: #EAECEF;
+        font-size: 16px;
+        font-weight: bold;
+        padding: 20px 16px 12px 16px;
+    }
+    QPushButton#navButton {
+        color: #848E9C;
+        background-color: transparent;
+        text-align: left;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    QPushButton#navButton:hover {
+        background-color: #1E2329;
+        color: #EAECEF;
+    }
+    QPushButton#navButton:checked {
+        background-color: #3E7FFF;
+        color: #FFFFFF;
+    }
+    QWidget#sidebar {
+        background-color: #121418;
+        border-right: 1px solid #2B3139;
+    }
+    QWidget#contentArea {
+        background-color: #0B0E11;
+    }
+    QLabel#contentTitle {
+        color: #EAECEF;
+        font-size: 24px;
+        font-weight: bold;
+        padding: 24px;
+    }
+    QStatusBar {
+        background-color: #121418;
+        color: #848E9C;
+        border-top: 1px solid #2B3139;
+    }
+   </string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QHBoxLayout" name="mainLayout" stretch="0,0">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <!-- 左侧导航栏 -->
+    <item>
+     <widget class="QWidget" name="sidebar">
+      <property name="minimumSize">
+       <size>
+        <width>220</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>220</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <layout class="QVBoxLayout" name="sidebarLayout">
+       <property name="spacing">
+        <number>4</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="navTitle">
+         <property name="text">
+          <string>印流PDflow</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnHome">
+         <property name="text">
+          <string>🎨 首页</string>
+         </property>
+         <property name="objectName">
+          <string>navButton</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnMerge">
+         <property name="text">
+          <string>📄 合并拆分</string>
+         </property>
+         <property name="objectName">
+          <string>navButton</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnCompress">
+         <property name="text">
+          <string>📦 压缩</string>
+         </property>
+         <property name="objectName">
+          <string>navButton</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnConvert">
+         <property name="text">
+          <string>🔄 格式转换</string>
+         </property>
+         <property name="objectName">
+          <string>navButton</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnWatermark">
+         <property name="text">
+          <string>💧 水印</string>
+         </property>
+         <property name="objectName">
+          <string>navButton</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnTemplateLayout">
+         <property name="text">
+          <string>📐 模板排版</string>
+         </property>
+         <property name="objectName">
+          <string>navButton</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnSpeedwrite">
+         <property name="text">
+          <string>✍️ 速文创作</string>
+         </property>
+         <property name="objectName">
+          <string>navButton</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="sidebarSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnSettings">
+         <property name="text">
+          <string>⚙️ 设置</string>
+         </property>
+         <property name="objectName">
+          <string>navButton</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <!-- 右侧内容区 -->
+    <item>
+     <widget class="QWidget" name="contentArea">
+      <layout class="QVBoxLayout" name="contentLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="contentTitle">
+         <property name="text">
+          <string>首页</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="pageContainer">
+         <property name="styleSheet">
+          <string>background-color: #0B0E11;</string>
+         </property>
+         <layout class="QStackedLayout" name="pagesStack">
+          <!-- 这里后续放入各个功能页面 -->
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <!-- 底部状态栏 -->
+  <widget class="QStatusBar" name="statusBar">
+   <property name="sizeGripEnabled">
+    <bool>false</bool>
+   </property>
+  </widget>
+ </widget>
+</ui>

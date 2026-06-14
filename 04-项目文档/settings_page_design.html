@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>印流PDflow — 设置页设计原型（简化版）</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg-base: #0B0E11;
+    --bg-card: #1A1A22;
+    --bg-card-hover: #1E2028;
+    --bg-input: #14141A;
+    --bg-toggle: #2B3139;
+    --bg-toggle-on: #4D7CFE;
+    --border: #2B3139;
+    --border-hover: #3D4450;
+    --text-primary: #EAECEF;
+    --text-secondary: #848E9C;
+    --text-muted: #5E6673;
+    --text-placeholder: #4A4B56;
+    --accent: #4D7CFE;
+    --accent-hover: #5C8AFF;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', -apple-system, sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 0;
+  }
+
+  .settings-container {
+    width: 720px;
+    max-width: 100%;
+    padding: 0 24px;
+  }
+
+  /* ─ 页面标题 ── */
+  .page-header {
+    margin-bottom: 36px;
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .page-header h1 .icon {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--accent), #6B8FFF);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  /* ── 分类标题 ── */
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 32px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 12px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .section-title:first-of-type {
+    margin-top: 0;
+  }
+
+  /* ── 设置卡片 ── */
+  .settings-group {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    transition: background var(--transition);
+  }
+
+  .setting-row:last-child {
+    border-bottom: none;
+  }
+
+  .setting-row:hover {
+    background: var(--bg-card-hover);
+  }
+
+  .setting-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .setting-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .setting-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .setting-control {
+    flex-shrink: 0;
+    margin-left: 20px;
+  }
+
+  /* ── 下拉选择框 ── */
+  select.setting-select {
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 7px 32px 7px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    appearance: none;
+    cursor: pointer;
+    min-width: 140px;
+    transition: border-color var(--transition);
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23848E9C' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  select.setting-select:hover { border-color: var(--border-hover); }
+  select.setting-select:focus { outline: none; border-color: var(--accent); }
+
+  /* ── Toggle 开关 ── */
+  .toggle {
+    width: 40px;
+    height: 22px;
+    background: var(--bg-toggle);
+    border-radius: 11px;
+    position: relative;
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: all var(--transition);
+  }
+
+  .toggle.active { background: var(--bg-toggle-on); }
+  .toggle.active::after { left: 21px; background: #fff; }
+
+  /* ── 关于卡片 ── */
+  .about-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .about-logo {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--accent), #6B8FFF);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .about-info { flex: 1; }
+
+  .about-info h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+
+  .about-info .version {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .about-info .desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* ── 按钮 ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+
+  .btn:hover {
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+  }
+
+  /* ── 底部提示 ── */
+  .footer-hint {
+    margin-top: 28px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-placeholder);
+  }
+</style>
+</head>
+<body>
+
+<div class="settings-container">
+
+  <!-- 页面标题 -->
+  <div class="page-header">
+    <h1>
+      <span class="icon">⚙</span>
+      设置
+    </h1>
+  </div>
+
+  <!-- ═══════════ 通用设置 ═══════════ -->
+  <div class="section-title">通用</div>
+
+  <div class="settings-group">
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-label">语言</div>
+        <div class="setting-desc">界面显示语言</div>
+      </div>
+      <div class="setting-control">
+        <select class="setting-select">
+          <option>简体中文</option>
+          <option>繁體中文</option>
+          <option>English</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-label">开发者模式</div>
+        <div class="setting-desc">显示「速文创作」等实验性功能</div>
+      </div>
+      <div class="setting-control">
+        <div class="toggle"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 输出设置 ═══════════ -->
+  <div class="section-title">输出</div>
+
+  <div class="settings-group">
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-label">默认输出目录</div>
+        <div class="setting-desc">处理后的文件默认保存位置</div>
+      </div>
+      <div class="setting-control">
+        <select class="setting-select" style="min-width: 180px;">
+          <option>输入文件所在目录</option>
+          <option>自定义目录...</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-label">文件名后缀</div>
+        <div class="setting-desc">自动为输出文件添加后缀名</div>
+      </div>
+      <div class="setting-control" style="display:flex;align-items:center;gap:6px;">
+        <input type="text" value="_out" style="background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;font-size:13px;font-family:inherit;width:80px;text-align:center;">
+        <span style="color:var(--text-muted);font-size:12px;">+ 扩展名</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 关于 ═══════════ -->
+  <div class="section-title">关于</div>
+
+  <div class="about-card">
+    <div class="about-logo">📄</div>
+    <div class="about-info">
+      <h3>印流PDflow</h3>
+      <div class="version">v1.0.0 · 2026.05.13</div>
+      <div class="desc">设计师专用的轻量级 PDF 工具箱</div>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <button class="btn">检查更新</button>
+      <button class="btn">反馈</button>
+    </div>
+  </div>
+
+  <div class="footer-hint">设置修改后自动保存 · 语言切换需重启生效</div>
+
+</div>
+
+</body>
+</html>

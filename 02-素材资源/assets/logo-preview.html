@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDFlow - Logo 资源包</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    background: #F7F8FA;
+    min-height: 100vh; padding: 40px; color: #1D2129;
+  }
+
+  h1 { text-align: center; font-size: 28px; color: #165DFF; margin-bottom: 4px; }
+  .subtitle { text-align: center; color: #86909C; font-size: 14px; margin-bottom: 48px; }
+  
+  .section-title {
+    font-size: 16px; font-weight: 600; color: #4E5969;
+    margin-bottom: 20px; padding-left: 12px; border-left: 3px solid #165DFF;
+  }
+
+  /* 主展示 */
+  .hero { text-align: center; margin-bottom: 48px; }
+  .hero img { width: 220px; height: 220px; border-radius: 32px; }
+
+  /* 尺寸网格 */
+  .size-grid {
+    display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;
+    max-width: 800px; margin: 0 auto 48px;
+  }
+  .size-card {
+    background: white; border-radius: 14px; padding: 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); min-width: 120px;
+    transition: transform 0.2s; cursor: pointer;
+  }
+  .size-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(22,93,255,0.1); }
+  .size-card img { image-rendering: auto; }
+  .size-name { font-size: 13px; font-weight: 600; color: #1D2129; }
+  .size-desc { font-size: 11px; color: #86909C; }
+
+  /* 场景展示 */
+  .scene-row { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; max-width: 900px; margin: 0 auto 36px; }
+  
+  .scene-item {
+    background: white; border-radius: 16px; padding: 24px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .badge-circle {
+    width: 110px; height: 110px; border-radius: 50%;
+    background: linear-gradient(135deg, #E8F3FF, #D4E4FF);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(22,93,255,0.12); border: 3px solid white;
+  }
+  .badge-circle img { width: 72px; height: 72px; border-radius: 16px; }
+
+  /* Dock */
+  .dock-row {
+    display: flex; gap: 10px; align-items: flex-end;
+    background: rgba(255,255,255,0.6); backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px; padding: 12px 20px; justify-content: center;
+    border: 1px solid rgba(255,255,255,0.5); max-width: fit-content; margin: 0 auto;
+  }
+  .dock-row img { width: 52px; height: 52px; border-radius: 11px; }
+
+  /* 背景 */
+  .bg-row { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+  .dark-bg { background: #1D2129; border-radius: 16px; padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .dark-bg img { width: 88px; height: 88px; border-radius: 18px; }
+  .gradient-bg { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .gradient-bg img { width: 88px; height: 88px; border-radius: 18px; }
+
+  /* 品牌 */
+  .brand-showcase {
+    display: flex; align-items: center; gap: 16px;
+    background: white; border-radius: 16px; padding: 24px 36px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06); max-width: fit-content; margin: 0 auto;
+  }
+  .brand-showcase img { width: 48px; height: 48px; border-radius: 12px; }
+  .brand-name { font-size: 22px; font-weight: 700; color: #1D2129; }
+  .brand-tagline { font-size: 13px; color: #86909C; }
+
+  .label { font-size: 13px; color: #4E5969; font-weight: 500; }
+  .label-sub { font-size: 11px; color: #C9CDD4; }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+  .section { margin-bottom: 44px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>⚡ PDFlow</h1>
+  <p class="subtitle">印流 — Logo 资源包 · AI 设计版</p>
+
+  <!-- 主图 -->
+  <div class="hero">
+    <img src="pdflow-logo.png" alt="PDFlow Logo">
+  </div>
+
+  <!-- 全尺寸 -->
+  <div class="section">
+    <div class="section-title">全尺寸资源（PNG）</div>
+    <div class="size-grid">
+      <div class="size-card">
+        <img src="pdflow-logo.png" style="width:100px;height:100px;border-radius:16px;">
+        <span class="size-name">原始版</span>
+        <span class="size-desc">1024×1024</span>
+      </div>
+      <div class="size-card">
+        <img src="pdflow-logo-256.png" style="width:72px;height:72px;border-radius:12px;">
+        <span class="size-name">256×256</span>
+        <span class="size-desc">App 图标 / 大尺寸</span>
+      </div>
+      <div class="size-card">
+        <img src="pdflow-logo-128.png" style="width:56px;height:56px;border-radius:10px;">
+        <span class="size-name">128×128</span>
+        <span class="size-desc">Windows 图标</span>
+      </div>
+      <div class="size-card">
+        <img src="pdflow-logo-64.png" style="width:44px;height:44px;border-radius:8px;">
+        <span class="size-name">64×64</span>
+        <span class="size-desc">工具栏图标</span>
+      </div>
+      <div class="size-card">
+        <img src="pdflow-logo-48.png" style="width:36px;height:36px;border-radius:7px;">
+        <span class="size-name">48×48</span>
+        <span class="size-desc">macOS 图标</span>
+      </div>
+      <div class="size-card">
+        <img src="pdflow-logo-32.png" style="width:28px;height:28px;border-radius:6px;">
+        <span class="size-name">32×32</span>
+        <span class="size-desc">任务栏</span>
+      </div>
+      <div class="size-card">
+        <img src="pdflow-logo-16.png" style="width:18px;height:18px;border-radius:4px;">
+        <span class="size-name">16×16</span>
+        <span class="size-desc">Favicon</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 场景 -->
+  <div class="section">
+    <div class="section-title">场景预览</div>
+    <div class="scene-row">
+      <div class="scene-item">
+        <div class="badge-circle"><img src="pdflow-logo-128.png"></div>
+        <span class="label">圆形 Badge</span>
+        <span class="label-sub">头像/水印</span>
+      </div>
+      <div class="scene-item">
+        <img src="pdflow-logo-128.png" style="width:96px;height:96px;border-radius:22px;">
+        <span class="label">App 图标</span>
+        <span class="label-sub">圆角方形</span>
+      </div>
+      <div class="scene-item">
+        <img src="pdflow-logo-64.png" style="width:64px;height:64px;border-radius:14px;">
+        <span class="label">工具栏</span>
+        <span class="label-sub">64×64</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dock -->
+  <div class="section">
+    <div class="section-title">Dock 效果</div>
+    <div class="dock-row">
+      <img src="pdflow-logo-64.png">
+    </div>
+  </div>
+
+  <!-- 背景兼容 -->
+  <div class="section">
+    <div class="section-title">背景兼容性</div>
+    <div class="bg-row">
+      <div class="dark-bg">
+        <img src="pdflow-logo-128.png">
+        <span style="font-size:12px;color:#C9CDD4;">深色背景</span>
+      </div>
+      <div class="gradient-bg">
+        <img src="pdflow-logo-128.png">
+        <span style="font-size:12px;color:rgba(255,255,255,0.75);">渐变背景</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 品牌 -->
+  <div class="section">
+    <div class="section-title">品牌应用</div>
+    <div class="brand-showcase">
+      <img src="pdflow-logo-64.png" alt="PDFlow">
+      <div>
+        <div class="brand-name">PDFlow</div>
+        <div class="brand-tagline">印流 — 外贸美工 PDF 工作台</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

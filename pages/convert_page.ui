@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ConvertPage</class>
+ <widget class="QWidget" name="convertPage">
+  <property name="geometry">
+    <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>780</width>
+      <height>640</height>
+    </rect>
+  </property>
+  <property name="styleSheet">
+    <string notr="true">QWidget#convertPage { background-color: #0B0E11; }</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+    <property name="spacing">
+      <number>12</number>
+    </property>
+    <property name="leftMargin">
+      <number>24</number>
+    </property>
+    <property name="topMargin">
+      <number>20</number>
+    </property>
+    <property name="rightMargin">
+      <number>24</number>
+    </property>
+    <property name="bottomMargin">
+      <number>24</number>
+    </property>
+
+    <!-- 顶部操作行：选择文件按钮 + 清空文字按钮 -->
+    <item>
+      <layout class="QHBoxLayout" name="topRow">
+        <property name="spacing">
+          <number>8</number>
+        </property>
+        <item>
+          <widget class="QPushButton" name="btnSelectFile">
+            <property name="minimumSize">
+              <size>
+                <width>160</width>
+                <height>40</height>
+              </size>
+            </property>
+            <property name="maximumSize">
+              <size>
+                <width>160</width>
+                <height>40</height>
+              </size>
+            </property>
+            <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="focusPolicy">
+              <enum>Qt::StrongFocus</enum>
+            </property>
+            <property name="text">
+              <string>选择文件</string>
+            </property>
+            <property name="styleSheet">
+              <string notr="true">
+QPushButton {
+    background-color: #4D7CFE;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 0 16px;
+    min-height: 40px;
+}
+QPushButton:hover {
+    background-color: #3D6CF0;
+}
+QPushButton:pressed {
+    background-color: #2D5CD0;
+}
+              </string>
+            </property>
+          </widget>
+        </item>
+        <item>
+          <widget class="QPushButton" name="btnClearAll">
+            <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="focusPolicy">
+              <enum>Qt::StrongFocus</enum>
+            </property>
+            <property name="text">
+              <string>清空</string>
+            </property>
+            <property name="styleSheet">
+              <string notr="true">
+QPushButton {
+    background-color: transparent;
+    border: none;
+    color: #848E9C;
+    font-size: 13px;
+    padding: 0 8px;
+    min-height: 40px;
+}
+QPushButton:hover {
+    color: #EAECEF;
+}
+              </string>
+            </property>
+          </widget>
+        </item>
+        <item>
+          <spacer name="topSpacer">
+            <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+              <size>
+                <width>0</width>
+                <height>0</height>
+              </size>
+            </property>
+          </spacer>
+        </item>
+        <item>
+          <widget class="QLabel" name="lblFileCount">
+            <property name="text">
+              <string>已选 0 个文件</string>
+            </property>
+            <property name="styleSheet">
+              <string notr="true">color: #848E9C; font-size: 13px;</string>
+            </property>
+          </widget>
+        </item>
+      </layout>
+    </item>
+
+    <!-- 已选文件信息显示区域 -->
+    <item>
+      <widget class="QListWidget" name="fileList">
+        <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="minimumHeight">
+          <number>180</number>
+        </property>
+        <property name="styleSheet">
+          <string notr="true">
+QListWidget {
+    background-color: #1A1A22;
+    border: 1px solid #2B3139;
+    border-radius: 8px;
+    padding: 4px;
+    outline: none;
+}
+QListWidget::item {
+    background: transparent;
+    border-radius: 6px;
+    margin: 2px;
+    padding: 8px 12px;
+    min-height: 36px;
+    color: #EAECEF;
+    font-size: 13px;
+}
+QListWidget::item:hover {
+    background: #1E2329;
+}
+QListWidget::item:selected {
+    background-color: transparent;
+}
+          </string>
+        </property>
+      </widget>
+    </item>
+
+    <!-- 间距 -->
+    <item>
+      <spacer name="spacer1">
+        <property name="orientation">
+          <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+          <size>
+            <width>0</width>
+            <height>4</height>
+          </size>
+        </property>
+      </spacer>
+    </item>
+
+    <!-- 格式选择卡片 -->
+    <item>
+      <widget class="QFrame" name="formatCard">
+        <property name="styleSheet">
+          <string notr="true">
+QFrame#formatCard {
+    background-color: #1A1A22;
+    border: 1px solid #2B3139;
+    border-radius: 8px;
+    padding: 16px;
+}
+          </string>
+        </property>
+        <layout class="QVBoxLayout" name="formatCardLayout">
+          <property name="spacing">
+            <number>10</number>
+          </property>
+          <property name="leftMargin">
+            <number>0</number>
+          </property>
+          <property name="topMargin">
+            <number>0</number>
+          </property>
+          <property name="rightMargin">
+            <number>0</number>
+          </property>
+          <property name="bottomMargin">
+            <number>0</number>
+          </property>
+          <item>
+            <widget class="QLabel" name="lblFormatTitle">
+              <property name="text">
+                <string>转换格式</string>
+              </property>
+              <property name="styleSheet">
+                <string notr="true">color: #EAECEF; font-size: 15px; font-weight: 600; background: transparent; border: none; padding: 0; margin: 0;</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QComboBox" name="comboFormat">
+              <property name="styleSheet">
+                <string notr="true">
+QComboBox {
+    background-color: #0B0E11;
+    border: 1px solid #2B3139;
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: #EAECEF;
+    font-size: 14px;
+    min-height: 36px;
+}
+QComboBox:hover {
+    border-color: #3D6CF0;
+}
+QComboBox::drop-down {
+    border: none;
+    width: 24px;
+}
+QComboBox::down-arrow {
+    width: 12px;
+    height: 12px;
+}
+QComboBox QAbstractItemView {
+    background-color: #1A1A22;
+    border: 1px solid #2B3139;
+    border-radius: 6px;
+    padding: 4px;
+    color: #EAECEF;
+    selection-background-color: #3D6CF0;
+}
+                </string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </widget>
+    </item>
+
+    <!-- 间距 -->
+    <item>
+      <spacer name="spacer2">
+        <property name="orientation">
+          <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+          <size>
+            <width>0</width>
+            <height>4</height>
+          </size>
+        </property>
+      </spacer>
+    </item>
+
+    <!-- 开始转换按钮 + 进度文字 -->
+    <item>
+      <layout class="QHBoxLayout" name="bottomRow">
+        <property name="spacing">
+          <number>16</number>
+        </property>
+        <item>
+          <widget class="QPushButton" name="btnStartConvert">
+            <property name="minimumSize">
+              <size>
+                <width>160</width>
+                <height>40</height>
+              </size>
+            </property>
+            <property name="maximumSize">
+              <size>
+                <width>160</width>
+                <height>40</height>
+              </size>
+            </property>
+            <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="focusPolicy">
+              <enum>Qt::StrongFocus</enum>
+            </property>
+            <property name="text">
+              <string>开始转换</string>
+            </property>
+            <property name="styleSheet">
+              <string notr="true">
+QPushButton {
+    background-color: #4D7CFE;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 0 24px;
+    min-height: 40px;
+}
+QPushButton:hover {
+    background-color: #3D6CF0;
+}
+QPushButton:pressed {
+    background-color: #2D5CD0;
+}
+QPushButton:disabled {
+    background-color: #2B3139;
+    color: #848E9C;
+}
+              </string>
+            </property>
+          </widget>
+        </item>
+        <item>
+          <widget class="QLabel" name="lblProgressText">
+            <property name="text">
+              <string/>
+            </property>
+            <property name="styleSheet">
+              <string notr="true">color: #848E9C; font-size: 13px;</string>
+            </property>
+          </widget>
+        </item>
+        <item>
+          <spacer name="bottomSpacer">
+            <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+              <size>
+                <width>0</width>
+                <height>0</height>
+              </size>
+            </property>
+          </spacer>
+        </item>
+      </layout>
+    </item>
+
+    <!-- 进度条 -->
+    <item>
+      <widget class="QProgressBar" name="progressBar">
+        <property name="value">
+          <number>0</number>
+        </property>
+        <property name="textVisible">
+          <bool>false</bool>
+        </property>
+        <property name="styleSheet">
+          <string notr="true">
+QProgressBar {
+    background-color: #1E1E28;
+    border: none;
+    border-radius: 3px;
+    min-height: 6px;
+    max-height: 6px;
+}
+QProgressBar::chunk {
+    background-color: #4D7CFE;
+    border-radius: 3px;
+}
+          </string>
+        </property>
+      </widget>
+    </item>
+
+    <!-- 状态文字 -->
+    <item>
+      <widget class="QLabel" name="lblStatus">
+        <property name="text">
+          <string/>
+        </property>
+        <property name="styleSheet">
+          <string notr="true">color: #848E9C; font-size: 13px; min-height: 20px;</string>
+        </property>
+      </widget>
+    </item>
+
+    <!-- 结果卡片（默认隐藏） -->
+    <item>
+      <widget class="QFrame" name="resultCard">
+        <property name="visible">
+          <bool>false</bool>
+        </property>
+        <property name="styleSheet">
+          <string notr="true">
+QFrame#resultCard {
+    background-color: #1A1A22;
+    border: 1px solid #4D7CFE;
+    border-radius: 8px;
+    padding: 16px;
+}
+          </string>
+        </property>
+        <layout class="QVBoxLayout" name="resultLayout">
+          <property name="spacing">
+            <number>6</number>
+          </property>
+          <property name="leftMargin">
+            <number>0</number>
+          </property>
+          <property name="topMargin">
+            <number>0</number>
+          </property>
+          <property name="rightMargin">
+            <number>0</number>
+          </property>
+          <property name="bottomMargin">
+            <number>0</number>
+          </property>
+          <item>
+            <widget class="QLabel" name="lblResultTitle">
+              <property name="text">
+                <string>✅ 转换完成</string>
+              </property>
+              <property name="styleSheet">
+                <string notr="true">color: #4D7CFE; font-size: 14px; font-weight: 600; background: transparent; border: none; padding: 0;</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QLabel" name="lblResultInfo">
+              <property name="styleSheet">
+                <string notr="true">color: #EAECEF; font-size: 13px; background: transparent; border: none; padding: 0;</string>
+              </property>
+              <property name="text">
+                <string/>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </widget>
+    </item>
+
+    <!-- 底部弹性空间 -->
+    <item>
+      <spacer name="spacerBottom">
+        <property name="orientation">
+          <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+          <size>
+            <width>0</width>
+            <height>0</height>
+          </size>
+        </property>
+      </spacer>
+    </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

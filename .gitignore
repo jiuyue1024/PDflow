@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.spec
+
+# 虚拟环境
+pyside6_env/
+venv/
+.env/
+
+# 项目输出
+03-安装包输出/
+*.rar
+*.zip
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统
+Thumbs.db
+.DS_Store
+
+# 测试临时文件
+pages/test_output/
+test_output/
+*.log
+
+# 历史归档（不参与运行时，禁止引用）
+_旧版归档/
+_旧版归档/**
+
+# IDE / 工具配置
+.qoder/
+.qoder/**
+
+# 文档测试产物
+04-项目文档/preview_test/
+04-项目文档/preview_test/**
+04-项目文档/backups/
+04-项目文档/backups/**
+
+# 临时测试脚本
+_test_*.py
+test_v*rc*.py
+*_test_*.py
+
+# 调试日志
+run_log.txt
+debug.log

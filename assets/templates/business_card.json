@@ -1,0 +1,73 @@
+{
+  "id": "business_card",
+  "name": "名片",
+  "icon": "🪪",
+  "description": "标准商务名片排版：正面 LOGO+公司+SLOGAN，背面个人信息+联系方式",
+  "type": "印刷物料",
+  "version": "4.0",
+  "version_note": "参考设计改版 — 正面公司品牌，背面个人信息；蓝色渐变背景；字号小一档",
+  "sides": ["front", "back"],
+  "fields": [
+    {"key": "name_cn", "label": "姓名（中文/英文）", "type": "text", "required": true, "maxLength": 30, "placeholder": "如：张三 / Name Surname", "group": "front_personal", "side": "front", "emphasis": true, "size_hint": "H1"},
+    {"key": "title", "label": "职位 / 头衔", "type": "text", "required": true, "maxLength": 30, "placeholder": "如：高级产品经理", "group": "front_personal", "side": "front", "size_hint": "Body"},
+    {"key": "phone", "label": "电话", "type": "text", "required": false, "maxLength": 25, "placeholder": "如：+00 123 456 789", "group": "front_contact", "side": "front", "size_hint": "Body"},
+    {"key": "email", "label": "邮箱", "type": "text", "required": false, "maxLength": 50, "placeholder": "如：info@mail.com", "group": "front_contact", "side": "front", "size_hint": "Body"},
+    {"key": "website", "label": "网站", "type": "text", "required": false, "maxLength": 50, "placeholder": "如：www.web.com", "group": "front_contact", "side": "front", "size_hint": "Body"},
+    {"key": "address", "label": "地址", "type": "text", "required": false, "maxLength": 60, "placeholder": "如：北京市朝阳区XX大厦18层", "group": "front_contact", "side": "front", "size_hint": "Body"},
+    {"key": "description", "label": "个人简介", "type": "textarea", "required": false, "maxLength": 200, "placeholder": "可填写个人简介或服务说明（多行）", "group": "front_personal", "side": "front", "size_hint": "Small"},
+    {"key": "back_logo", "label": "正面 LOGO", "type": "image_upload", "required": false, "placeholder": "上传 LOGO（PNG 透明背景推荐）", "group": "front_personal", "side": "front"},
+
+    {"key": "logo", "label": "公司 LOGO", "type": "image_upload", "required": false, "placeholder": "上传公司 LOGO（PNG 透明背景推荐）", "group": "back_brand", "side": "back"},
+    {"key": "company", "label": "公司名称", "type": "text", "required": true, "maxLength": 40, "placeholder": "如：COMPANY NAME", "group": "back_brand", "side": "back", "emphasis": true, "size_hint": "H1"},
+    {"key": "slogan", "label": "SLOGAN / 副标题", "type": "text", "required": false, "maxLength": 60, "placeholder": "如：CORE BUSINESS · 专业服务", "group": "back_brand", "side": "back", "size_hint": "Small"}
+  ],
+  "style_options": {
+    "theme_color": {
+      "label": "主题色",
+      "type": "color_preset",
+      "default": "#4D7CFE",
+      "options": [
+        {"name": "科技蓝", "value": "#4D7CFE"},
+        {"name": "活力红", "value": "#FF3B30"},
+        {"name": "森林绿", "value": "#34C759"},
+        {"name": "深邃紫", "value": "#AF52DE"},
+        {"name": "暖阳橙", "value": "#FF9500"},
+        {"name": "高级黑", "value": "#1D1D1F"},
+        {"name": "海洋青", "value": "#5AC8FA"},
+        {"name": "玫瑰金", "value": "#B76E79"}
+      ]
+    },
+    "bg_style": {
+      "label": "背景样式",
+      "type": "radio",
+      "default": "blue_gradient",
+      "options": [
+        {"name": "蓝色渐变（参考）", "value": "blue_gradient"},
+        {"name": "纯白", "value": "white"},
+        {"name": "浅灰", "value": "light_gray"},
+        {"name": "渐变（上→下）", "value": "gradient_vertical"},
+        {"name": "渐变（左→右）", "value": "gradient_horizontal"}
+      ]
+    },
+    "bg_custom_color": {
+      "label": "自定义背景色",
+      "type": "color",
+      "default": ""
+    }
+  },
+  "sample": {
+    "front": {
+      "name_cn": "Name Surname",
+      "title": "Position",
+      "phone": "+00 123 456 789",
+      "email": "info@mail.com",
+      "website": "www.web.com",
+      "address": "北京市朝阳区XX大厦18层",
+      "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod."
+    },
+    "back": {
+      "company": "COMPANY NAME",
+      "slogan": "CORE BUSINESS · 专业服务"
+    }
+  }
+}

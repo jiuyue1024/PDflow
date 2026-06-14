@@ -1,0 +1,60 @@
+{
+  "id": "report",
+  "name": "分析报告",
+  "icon": "📊",
+  "description": "专业分析报告模板，支持目录、章节、图表占位、总结",
+  "type": "报告",
+  "version": "1.0",
+  "sample": {
+    "title": "市场分析报告",
+    "subtitle": "2026年第二季度",
+    "author": "分析部",
+    "date": "2026年6月",
+    "summary": "本报告针对2026年第二季度市场情况进行分析，旨在为业务决策提供数据支持。",
+    "sections": "## 1. 总体概况\n本季度市场总规模环比上升12%，同比上升18%。\n\n## 2. 细分表现\n华东区占比45%，华南区占比30%，其他区域合计25%。\n\n## 3. 关键指标\n新客获取成本降低8%，复购率提升至42%。",
+    "conclusion": "建议加大华东区投入，重点优化复购链路。",
+    "footer_text": "机密文件 · 仅供内部使用"
+  },
+  "fields": [
+    {"key": "title", "label": "报告标题", "type": "text", "required": true, "maxLength": 50, "placeholder": "输入报告标题", "default": "分析报告"},
+    {"key": "subtitle", "label": "副标题", "type": "text", "required": false, "maxLength": 80, "placeholder": "报告副标题"},
+    {"key": "author", "label": "作者", "type": "text", "required": false, "maxLength": 30, "placeholder": "作者姓名"},
+    {"key": "date", "label": "日期", "type": "text", "required": false, "maxLength": 30, "placeholder": "2026年1月"},
+    {"key": "summary", "label": "摘要", "type": "textarea", "required": false, "placeholder": "报告摘要"},
+    {"key": "sections", "label": "章节内容", "type": "textarea", "required": true, "placeholder": "格式：## 章节标题\n章节内容，章节间空行分隔"},
+    {"key": "conclusion", "label": "结论", "type": "textarea", "required": false, "placeholder": "结论与建议"},
+    {"key": "footer_text", "label": "页脚文字", "type": "text", "required": false, "maxLength": 50, "placeholder": "机密文件 · 仅供内部使用"}
+  ],
+  "style_options": {
+    "theme_color": {
+      "label": "主题色",
+      "type": "color_preset",
+      "default": "#1A5276",
+      "options": [
+        {"name": "深蓝", "value": "#1A5276"},
+        {"name": "墨黑", "value": "#1A1A22"},
+        {"name": "科技蓝", "value": "#4D7CFE"},
+        {"name": "墨绿", "value": "#0E6655"}
+      ]
+    },
+    "header_style": {
+      "label": "标题栏样式",
+      "type": "select",
+      "default": "color_block",
+      "options": [
+        {"name": "色块", "value": "color_block"},
+        {"name": "装饰条", "value": "bar"},
+        {"name": "无", "value": "none"}
+      ]
+    },
+    "bg_style": {
+      "label": "背景样式",
+      "type": "select",
+      "default": "white",
+      "options": [
+        {"name": "纯白", "value": "white"},
+        {"name": "浅灰", "value": "light_gray"}
+      ]
+    }
+  }
+}

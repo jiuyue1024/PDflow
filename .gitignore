@@ -4,8 +4,25 @@ __pycache__/
 *.pyo
 *.egg-info/
 dist/
-build/
 *.spec
+
+# v1.1-patch: 精细化 build 目录（不忽略整个目录，只忽略产物）
+# build/*.py（make_*.py、check_*.py、test_*.py）应入 git
+build/_test_*.xlsx
+build/_e2e_*.xlsx
+build/_diff_*.txt
+build/_ls-tree.txt
+build/7z-*.msi
+build/7zr.exe
+build/7zsfx.7z
+build/PDFlow_*.7z
+build/sfx_launcher/
+build/sfx_launcher_v2/
+build/UPX/
+build/_internal/
+build/dist/
+build/UPX*.exe
+build/upx*.exe
 
 # 虚拟环境
 pyside6_env/
@@ -16,6 +33,15 @@ venv/
 03-安装包输出/
 *.rar
 *.zip
+
+# v1.1-patch: build 工具脚本应入 git（make_*.py、check_*.py、test_*.py）
+# 反向排除 build/*.py，覆盖工具脚本
+build/*.py
+!build/*.py
+build/_test_*.xlsx
+build/_e2e_*.xlsx
+build/_diff_*.txt
+build/_ls-tree.txt
 
 # IDE
 .vscode/

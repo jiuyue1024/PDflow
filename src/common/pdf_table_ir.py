@@ -136,3 +136,94 @@ def has_newline_cells(rows: List[List[str]]) -> bool:
             if cell and "\n" in cell:
                 return True
     return False
+
+
+# ============================================================
+# 5. P0 Hotfix: 统一输出协议（v1.1-patch Excel crash 修复）
+# ============================================================
+def to_dataframe(ir_or_rows):
+    """IR / rows → pandas.DataFrame 统一入口
+
+    支持入参：
+    - TableBlock dataclass
+    - dict IR {"rows": [...], "spans": ..., "meta": ...}
+    - list of list（裸 rows）
+    - pandas.DataFrame（透传）
+    """
+    # 1. 已经是 DataFrame
+    if hasattr(ir_or_rows, "values") and hasattr(ir_or_rows, "columns") and hasattr(ir_or_rows, "fillna"):
+        return ir_or_rows
+
+    # 2. TableBlock dataclass
+    if isinstance(ir_or_rows, TableBlock):
+        import pandas as pd
+        return pd.DataFrame(ir_or_rows.rows)
+
+    # 3. dict IR
+    if isinstance(ir_or_rows, dict) and "rows" in ir_or_rows:
+        import pandas as pd
+        return pd.DataFrame(ir_or_rows["rows"])
+
+    # 4. 裸 list of list
+    if isinstance(ir_or_rows, list):
+        import pandas as pd
+        return pd.DataFrame(ir_or_rows)
+
+    raise Exception(f"Unsupported Excel input type: {type(ir_or_rows).__name__}")
+
+
+def normalize_excel_input(result):
+    """P0 Hotfix: 统一 IR / DataFrame / list 结构 → DataFrame
+
+    Excel 写入层只接受 pandas.DataFrame，禁止任何路径直接调用 df.tolist()
+
+    支持入参：
+    - 有 to_dataframe 方法的对象
+    - dict IR
+    - 已经是 pandas DataFrame
+    - 裸 list of list
+    """
+    # 1) 有 to_dataframe 方法的对象（IR dataclass）
+    if hasattr(result, "to_dataframe") and callable(getattr(result, "to_dataframe", None)):
+        return result.to_dataframe()
+
+    # 2) dict IR
+    if isinstance(result, dict) and "rows" in result:
+        return to_dataframe(result)
+
+    # 3) 已经是 DataFrame（通过特征属性判断，避免 isinstance 对 import 未加载 pandas 的情况报错）
+    if hasattr(result, "values") and hasattr(result, "columns") and hasattr(result, "fillna"):
+        return result
+
+    # 4) 裸 list of list
+    if isinstance(result, list) and (not result or isinstance(result[0], (list, str))):
+        return to_dataframe(result)
+
+    raise Exception(f"normalize_excel_input: unsupported type: {type(result).__name__}")
+
+
+# 给 TableBlock 加 to_dataframe 方法
+def _tableblock_to_dataframe(self) -> "pd.DataFrame":
+    """TableBlock.to_dataframe()：IR → DataFrame"""
+    return to_dataframe(self)
+
+
+TableBlock.to_dataframe = _tableblock_to_dataframe
+
+
+# ============================================================
+# 6. Fallback 工厂（统一 fallback 返回结构）
+# ============================================================
+def fallback_block(rows: List[List[str]], page: int = 0, table_id: int = 0,
+                   confidence: float = 0.5) -> Dict:
+    """fallback 统一返回 IR dict（带 mode="text_fallback"）
+
+    禁止 fallback 返回 DataFrame + IR 混合类型
+    """
+    return to_table_block(
+        rows=rows,
+        page=page,
+        table_id=table_id,
+        confidence=confidence,
+        mode="text_fallback",
+    )

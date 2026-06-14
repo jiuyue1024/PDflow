@@ -746,7 +746,7 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
         import pdfplumber
         from openpyxl import Workbook
         from openpyxl.styles import Alignment
-        from src.common.pdf_table_ir import normalize_excel_input
+        from src.common.pdf_table_ir import ir_to_rows
     except Exception as e:
         raise Exception(f"PDF转Excel功能依赖缺失: {type(e).__name__}: {e}")
 
@@ -766,10 +766,11 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
         if not all_sheets:
             raise Exception("PDF 未检测到可提取的表格或文字内容（v1.1-patch: 可能是扫描件或图片型 PDF）")
 
-        # v1.1-patch P0 Hotfix：Excel 写入层只接受 pandas.DataFrame
-        # - 统一通过 normalize_excel_input 收敛（IR / DataFrame / list 全部接受）
-        # - 禁止任何路径直接调用 df.tolist() 或 df.values.tolist()
-        # - 用 df.to_dict("records") 拿数据
+        # v1.1-patch 统一 IR 输出链路：
+        # Excel writer 只吃 IR rows，禁止 DataFrame 中间层
+        # - _extract_page_best / fallback 统一返回 IR dict
+        # - 写入层直接从 IR 取 rows，逐行逐格写入
+        # - 禁止 normalize_excel_input / df.to_dict("records") 中间转换
         def write_cell(ws, r, c, value):
             cell = ws.cell(row=r, column=c, value=value)
             cell.alignment = Alignment(wrap_text=True, vertical="top")
@@ -779,23 +780,20 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
         wb.remove(wb.active)  # 移除默认 sheet
 
         for sheet_name, ir in all_sheets:
-            # P0 Hotfix: 统一 IR/DataFrame/list → DataFrame
-            df = normalize_excel_input(ir)
-            # P0 Hotfix: 用 to_dict("records") 替代 values.tolist()
-            records = df.fillna("").astype(str).to_dict("records")
+            rows = ir_to_rows(ir)
 
             ws = wb.create_sheet(sheet_name[:31])
-            for i, row_dict in enumerate(records, 1):
-                for j, val in enumerate(row_dict.values(), 1):
+            for i, row in enumerate(rows, 1):
+                for j, val in enumerate(row, 1):
                     write_cell(ws, i, j, val)
 
-            # 列宽估算（保留 v1 的 CJK 系数，从 ws 读以保持一致性）
-            if records:
-                max_cols = max((len(r) for r in records), default=0)
+            # 列宽估算（从 ws 读以保持一致性）
+            if rows:
+                max_cols = max((len(r) for r in rows), default=0)
                 for col_idx in range(1, max_cols + 1):
                     col_letter = ws.cell(row=1, column=col_idx).column_letter
                     max_len = 0
-                    for r_idx in range(1, len(records) + 1):
+                    for r_idx in range(1, len(rows) + 1):
                         try:
                             v = ws.cell(row=r_idx, column=col_idx).value
                             val = str(v) if v else ""
@@ -896,9 +894,10 @@ _PARAM_COMBOS = [
 def _extract_page_best(page, page_num: int) -> list:
     """对单页尝试所有参数组合，返回最优提取结果
 
-    返回: [(sheet_name, df), ...]
+    返回: [(sheet_name, ir_dict), ...]  — 统一 IR dict，禁止返回 DataFrame
     """
     import pandas as pd
+    from src.common.pdf_table_ir import to_table_block, safe_list
 
     best_tables = []
 
@@ -928,7 +927,7 @@ def _extract_page_best(page, page_num: int) -> list:
             })
 
     if not best_tables:
-        # P0 Hotfix: 用 parse_layout_blocks 替代 _extract_page_words（旧 DataFrame 路径）
+        # 用 parse_layout_blocks 替代旧 DataFrame 路径
         from src.common.pdf_layout_parser import parse_layout_blocks
         page_rows = parse_layout_blocks(page)
         if page_rows:
@@ -955,20 +954,15 @@ def _extract_page_best(page, page_num: int) -> list:
             selected.append(candidate)
             used_dfs.append(candidate["df"])
 
-    # v1.1-patch P0 Hotfix：在输出边界把 DataFrame 包装成 IR dict
-    # 保留内部 DataFrame 流程以维持评分/去重的稳定性
-    # P0 修复：禁止 df.values.tolist() 主路径，改用 to_dict("records") 统一
-    from src.common.pdf_table_ir import to_table_block
+    # 统一输出为 IR dict：DataFrame → safe_list → to_table_block
+    # 禁止任何函数 return DataFrame（除 _score_table 内部评分用）
     result = []
     for idx, item in enumerate(selected, 1):
         sheet_name = f"第{page_num}页_表{idx}"
         df = item["df"]
-        # P0 Hotfix: DataFrame → list of list（IR rows）走 to_dict("records") 路径
-        if hasattr(df, 'to_dict'):
-            records = df.fillna("").astype(str).to_dict("records")
-            rows = [list(r.values()) for r in records]
-        else:
-            rows = df
+        # DataFrame → list of list（IR rows），用 safe_list 替代 to_dict("records")
+        records = df.fillna("").astype(str).to_dict("records")
+        rows = [list(r.values()) for r in records]
         ir = to_table_block(
             rows=rows,
             page=page_num,
@@ -1034,8 +1028,8 @@ def _score_table(df) -> float:
     content_score = min(avg_chars / 5.0, 1.0) * 0.2
 
     # v1.1-patch：列稳定性评分（每列累加，最多贡献 0.1 * 5 = 0.5）
-    # P0 Hotfix：用 df.iloc[:, col_idx] 按位置取列，强制返回 Series
-    # 避免 df[col] 在某些 pandas 行为下返回 DataFrame 导致 .tolist() 崩溃
+    # 统一用 safe_list 替代 .tolist()，禁止 DataFrame/Series 直接 .tolist()
+    from src.common.pdf_table_ir import safe_list
     col_stability_total = 0.0
     col_count = 0
     for col_idx, _ in enumerate(df.columns):
@@ -1043,7 +1037,7 @@ def _score_table(df) -> float:
         # 强制 squeeze：任何长度 1 的 DataFrame → Series
         if hasattr(col_series, 'ndim') and col_series.ndim > 1:
             col_series = col_series.squeeze()
-        col_stability_total += _column_stability_score(col_series.tolist())
+        col_stability_total += _column_stability_score(safe_list(col_series))
         col_count += 1
     # 归一化：按列数取平均，单表最大贡献 0.1
     col_stability_score = (col_stability_total / col_count) if col_count > 0 else 0.0

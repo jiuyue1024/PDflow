@@ -141,6 +141,37 @@ def has_newline_cells(rows: List[List[str]]) -> bool:
 # ============================================================
 # 5. P0 Hotfix: 统一输出协议（v1.1-patch Excel crash 修复）
 # ============================================================
+def safe_list(x):
+    """安全转 list：兼容 pandas Series / DataFrame / ndarray / 原生 list
+
+    禁止直接调用 .tolist()（DataFrame.tolist() 不存在，Series.tolist() 可能因
+    DataFrame 伪装成 Series 而崩溃）。本函数统一处理：
+
+    - pd.Series → .tolist()
+    - pd.DataFrame → .values.tolist()（二维 list）
+    - numpy ndarray → .tolist()
+    - list → 原样返回
+    - 其他 → list()
+    """
+    # pandas DataFrame（有 values 和 columns 和 fillna）
+    if hasattr(x, "columns") and hasattr(x, "fillna"):
+        return x.values.tolist()
+    # pandas Series（有 values 但没有 columns）
+    if hasattr(x, "values") and hasattr(x, "tolist"):
+        return x.tolist()
+    # numpy ndarray
+    if hasattr(x, "tolist"):
+        return x.tolist()
+    # 原生 list
+    if isinstance(x, list):
+        return x
+    # 其他可迭代
+    try:
+        return list(x)
+    except TypeError:
+        return [x]
+
+
 def to_dataframe(ir_or_rows):
     """IR / rows → pandas.DataFrame 统一入口
 

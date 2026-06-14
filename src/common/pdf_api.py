@@ -753,24 +753,31 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
     try:
         output_path = _resolve_output_path(output_path, input_path, ".xlsx")
 
-        all_sheets = []
+        # v1.1-patch: page 级合并 sheet 策略
+        # - 同页所有表格合并到一个 sheet（"第N页"）
+        # - fallback 全局唯一一个 sheet（"文字内容"）
+        # - 禁止 per-table 拆 sheet，禁止重复 sheet
+        page_irs = []  # [(page_num, ir)]
+        has_structured = False
 
         with pdfplumber.open(input_path) as pdf:
             for page_num, page in enumerate(pdf.pages, 1):
-                page_tables = _extract_page_best(page, page_num)
-                all_sheets.extend(page_tables)
+                ir = _extract_page_best(page, page_num)
+                if ir is not None:
+                    page_irs.append((page_num, ir))
+                    if ir.get("meta", {}).get("mode") == "structured":
+                        has_structured = True
 
-        if not all_sheets:
-            all_sheets = _extract_text_fallback(input_path)
+        # 如果没有结构化表格，尝试全局 fallback
+        fallback_ir = None
+        if not has_structured:
+            fallback_ir = _extract_text_fallback(input_path)
 
-        if not all_sheets:
+        if not page_irs and fallback_ir is None:
             raise Exception("PDF 未检测到可提取的表格或文字内容（v1.1-patch: 可能是扫描件或图片型 PDF）")
 
         # v1.1-patch 统一 IR 输出链路：
         # Excel writer 只吃 IR rows，禁止 DataFrame 中间层
-        # - _extract_page_best / fallback 统一返回 IR dict
-        # - 写入层直接从 IR 取 rows，逐行逐格写入
-        # - 禁止 normalize_excel_input / df.to_dict("records") 中间转换
         def write_cell(ws, r, c, value):
             cell = ws.cell(row=r, column=c, value=value)
             cell.alignment = Alignment(wrap_text=True, vertical="top")
@@ -779,7 +786,9 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
         wb = Workbook()
         wb.remove(wb.active)  # 移除默认 sheet
 
-        for sheet_name, ir in all_sheets:
+        # 写入 page 级 sheet
+        for page_num, ir in page_irs:
+            sheet_name = f"第{page_num}页"
             rows = ir_to_rows(ir)
 
             ws = wb.create_sheet(sheet_name[:31])
@@ -787,7 +796,7 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
                 for j, val in enumerate(row, 1):
                     write_cell(ws, i, j, val)
 
-            # 列宽估算（从 ws 读以保持一致性）
+            # 列宽估算
             if rows:
                 max_cols = max((len(r) for r in rows), default=0)
                 for col_idx in range(1, max_cols + 1):
@@ -804,12 +813,37 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
                             pass
                     ws.column_dimensions[col_letter].width = min(max(max_len + 4, 8), 50)
 
+        # 写入全局唯一 fallback sheet
+        if fallback_ir is not None:
+            rows = ir_to_rows(fallback_ir)
+            ws = wb.create_sheet("文字内容")
+            for i, row in enumerate(rows, 1):
+                for j, val in enumerate(row, 1):
+                    write_cell(ws, i, j, val)
+
+            if rows:
+                max_cols = max((len(r) for r in rows), default=0)
+                for col_idx in range(1, max_cols + 1):
+                    col_letter = ws.cell(row=1, column=col_idx).column_letter
+                    max_len = 0
+                    for r_idx in range(1, len(rows) + 1):
+                        try:
+                            v = ws.cell(row=r_idx, column=col_idx).value
+                            val = str(v) if v else ""
+                            cjk = sum(1 for c in val if '\u4e00' <= c <= '\u9fff')
+                            cell_len = len(val) + cjk
+                            max_len = max(max_len, cell_len)
+                        except Exception:
+                            pass
+                    ws.column_dimensions[col_letter].width = min(max(max_len + 4, 8), 50)
+
+        total_sheets = len(wb.sheetnames)
         wb.save(output_path)
 
         return {
             "status": "ok",
             "output": output_path,
-            "tables": len(all_sheets),
+            "tables": total_sheets,
         }
     except Exception as e:
         raise Exception(f"PDF转Excel失败: {str(e)}")
@@ -892,9 +926,10 @@ _PARAM_COMBOS = [
 
 
 def _extract_page_best(page, page_num: int) -> list:
-    """对单页尝试所有参数组合，返回最优提取结果
+    """对单页尝试所有参数组合，返回该页所有表格的合并 IR
 
-    返回: [(sheet_name, ir_dict), ...]  — 统一 IR dict，禁止返回 DataFrame
+    返回: ir_dict  — 该页所有表格合并为一个 IR，同页不拆 sheet
+    如果该页无表格，返回 fallback IR（文字提取）；如果完全空白，返回 None
     """
     import pandas as pd
     from src.common.pdf_table_ir import to_table_block, safe_list
@@ -936,8 +971,8 @@ def _extract_page_best(page, page_num: int) -> list:
                 page=page_num,
                 table_id=1,
             )
-            return [(f"第{page_num}页_文字", ir)]
-        return []
+            return ir
+        return None
 
     best_tables.sort(key=lambda x: x["score"], reverse=True)
 
@@ -954,25 +989,25 @@ def _extract_page_best(page, page_num: int) -> list:
             selected.append(candidate)
             used_dfs.append(candidate["df"])
 
-    # 统一输出为 IR dict：DataFrame → safe_list → to_table_block
-    # 禁止任何函数 return DataFrame（除 _score_table 内部评分用）
-    result = []
+    # 同页所有表格合并为一个 IR（rows 拼接，表间空一行分隔）
+    all_rows = []
     for idx, item in enumerate(selected, 1):
-        sheet_name = f"第{page_num}页_表{idx}"
         df = item["df"]
-        # DataFrame → list of list（IR rows），用 safe_list 替代 to_dict("records")
-        records = df.fillna("").astype(str).to_dict("records")
-        rows = [list(r.values()) for r in records]
-        ir = to_table_block(
-            rows=rows,
-            page=page_num,
-            table_id=idx,
-            confidence=item.get("score", 1.0),
-            mode="structured",
-        )
-        result.append((sheet_name, ir))
+        # DataFrame → list of list：用 values.tolist() 避免 to_dict("records")
+        # 的 "columns are not unique" UserWarning
+        rows = df.fillna("").astype(str).values.tolist()
+        if all_rows:
+            all_rows.append([])  # 表间空行分隔
+        all_rows.extend(rows)
 
-    return result
+    ir = to_table_block(
+        rows=all_rows,
+        page=page_num,
+        table_id=1,
+        confidence=selected[0].get("score", 1.0),
+        mode="structured",
+    )
+    return ir
 
 
 def _column_stability_score(cols) -> float:
@@ -1068,30 +1103,36 @@ def _extract_text_fallback(input_path: str) -> list:
 
     使用 parse_layout_blocks 重建阅读顺序（按 y 坐标 + 行聚类 + 语义拆分）
     禁止 page.extract_text() 和 text.split("\\n") 主路径
+
+    返回: 全局唯一 fallback IR（所有页合并），不再按页拆 sheet
     """
     import pdfplumber
     from src.common.pdf_table_ir import fallback_block
     from src.common.pdf_layout_parser import parse_layout_blocks
 
-    results = []
+    all_rows = []
 
     try:
         with pdfplumber.open(input_path) as pdf:
             for page_num, page in enumerate(pdf.pages, 1):
-                # P0 Hotfix: 用 parse_layout_blocks 替代 extract_text() + split("\n")
                 rows = parse_layout_blocks(page)
                 if rows:
-                    ir = fallback_block(
-                        rows=rows,
-                        page=page_num,
-                        table_id=1,
-                    )
-                    sheet_name = f"第{page_num}页_文字"
-                    results.append((sheet_name, ir))
+                    if all_rows:
+                        all_rows.append([])  # 页间空行分隔
+                    for r in rows:
+                        all_rows.extend(r if isinstance(r, list) else [r])
     except Exception:
         pass
 
-    return results
+    if not all_rows:
+        return None
+
+    ir = fallback_block(
+        rows=[r if isinstance(r, list) else [r] for r in all_rows],
+        page=0,
+        table_id=0,
+    )
+    return ir
 
 
 def _clean_table_data(table):

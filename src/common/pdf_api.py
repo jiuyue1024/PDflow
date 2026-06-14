@@ -896,10 +896,16 @@ def _extract_page_best(page, page_num: int) -> list:
             })
 
     if not best_tables:
-        page_words = _extract_page_words(page)
-        if page_words:
-            df = pd.DataFrame(page_words)
-            return [(f"第{page_num}页_文字", df)]
+        # P0 Hotfix: 用 parse_layout_blocks 替代 _extract_page_words（旧 DataFrame 路径）
+        from src.common.pdf_layout_parser import parse_layout_blocks
+        page_rows = parse_layout_blocks(page)
+        if page_rows:
+            ir = fallback_block(
+                rows=page_rows,
+                page=page_num,
+                table_id=1,
+            )
+            return [(f"第{page_num}页_文字", ir)]
         return []
 
     best_tables.sort(key=lambda x: x["score"], reverse=True)
@@ -939,51 +945,6 @@ def _extract_page_best(page, page_num: int) -> list:
             mode="structured",
         )
         result.append((sheet_name, ir))
-
-    return result
-
-
-def _extract_page_words(page) -> list:
-    """word-level 文字回退：按位置推断列结构"""
-    try:
-        words = page.extract_words(x_tolerance=3, y_tolerance=3)
-    except Exception:
-        return []
-
-    if not words:
-        return []
-
-    words.sort(key=lambda w: (round(w["top"], 0), w["x0"]))
-
-    rows = []
-    current_row = []
-    current_top = None
-
-    for w in words:
-        top = round(w["top"], 0)
-        if current_top is None or abs(top - current_top) > 5:
-            if current_row:
-                rows.append(current_row)
-            current_row = [w["text"]]
-            current_top = top
-        else:
-            current_row.append(w["text"])
-
-    if current_row:
-        rows.append(current_row)
-
-    max_cols = max(len(r) for r in rows) if rows else 0
-    if max_cols == 0:
-        return []
-
-    if max_cols == 1:
-        return [{"内容": r[0]} for r in rows if r]
-
-    headers = [f"列{i+1}" for i in range(max_cols)]
-    result = []
-    for r in rows:
-        padded = r + [""] * (max_cols - len(r))
-        result.append(dict(zip(headers, padded)))
 
     return result
 
@@ -1077,49 +1038,30 @@ def _table_to_dataframe(cleaned_table) -> "pd.DataFrame":
 
 
 def _extract_text_fallback(input_path: str) -> list:
-    """纯文字回退提取（v1.1-patch）：当所有参数组合都无法识别表格时
+    """纯文字回退提取（v1.1-patch P0 Hotfix）：
 
-    返回：[(sheet_name, ir_dict), ...]
-    ir_dict["meta"]["mode"] = "text_fallback"，与 structured 表格区分
-    P0 Hotfix：统一通过 fallback_block 工厂函数，禁止 DataFrame + IR 混合返回
+    使用 parse_layout_blocks 重建阅读顺序（按 y 坐标 + 行聚类 + 语义拆分）
+    禁止 page.extract_text() 和 text.split("\\n") 主路径
     """
     import pdfplumber
     from src.common.pdf_table_ir import fallback_block
+    from src.common.pdf_layout_parser import parse_layout_blocks
 
     results = []
 
     try:
         with pdfplumber.open(input_path) as pdf:
             for page_num, page in enumerate(pdf.pages, 1):
-                page_words = _extract_page_words(page)
-                if page_words:
-                    if page_words:
-                        # 统一列名
-                        headers = list(page_words[0].keys())
-                        rows = []
-                        for d in page_words:
-                            rows.append([d.get(h, "") for h in headers])
-                        ir = fallback_block(
-                            rows=rows,
-                            page=page_num,
-                            table_id=1,
-                        )
-                        sheet_name = f"第{page_num}页_文字"
-                        results.append((sheet_name, ir))
-                    continue
-
-                text = page.extract_text()
-                if text and text.strip():
-                    lines = [line.strip() for line in text.strip().split("\n") if line.strip()]
-                    if lines:
-                        rows = [[line] for line in lines]
-                        ir = fallback_block(
-                            rows=rows,
-                            page=page_num,
-                            table_id=1,
-                        )
-                        sheet_name = f"第{page_num}页_文字"
-                        results.append((sheet_name, ir))
+                # P0 Hotfix: 用 parse_layout_blocks 替代 extract_text() + split("\n")
+                rows = parse_layout_blocks(page)
+                if rows:
+                    ir = fallback_block(
+                        rows=rows,
+                        page=page_num,
+                        table_id=1,
+                    )
+                    sheet_name = f"第{page_num}页_文字"
+                    results.append((sheet_name, ir))
     except Exception:
         pass
 

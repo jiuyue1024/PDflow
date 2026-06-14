@@ -54,3 +54,18 @@ test_v*rc*.py
 # 调试日志
 run_log.txt
 debug.log
+
+# test outputs
+tests/**/output/
+tests/*_output/
+*.log
+debug_*.pdf
+debug_*.png
+
+# binaries/tools
+assets/tools/*.exe
+assets/tools/*.dll
+
+# temp artifacts
+__pycache__/
+*.pyc

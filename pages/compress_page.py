@@ -497,47 +497,65 @@ class CompressPage(QWidget):
     def _start_batch(self):
         if self._is_busy or not self._file_paths:
             return
-
-        output_dir = QFileDialog.getExistingDirectory(
-            self,
-            "选择保存压缩后PDF的文件夹"
-        )
-        if not output_dir:
-            return
-        self._output_dir = output_dir
-
+    
         self._is_busy = True
         self._processed_count = 0
         self._failed_count = 0
         self._total_original = 0
         self._total_compressed = 0
-
+    
         if self.ui.radioLow.isChecked():
             self._quality = "low"
         elif self.ui.radioMedium.isChecked():
             self._quality = "medium"
         else:
             self._quality = "high"
-
+    
         self.ui.resultCard.setVisible(False)
         self.ui.lblStatus.setText("")
         self.ui.lblProgressText.setText("准备开始...")
         self.ui.btnStartBatch.setEnabled(False)
         self.ui.btnSelectFile.setEnabled(False)
         self.ui.btnClearAll.setEnabled(False)
-
+    
         total = len(self._file_paths)
         self.ui.progressBar.setMaximum(total)
         self.ui.progressBar.setValue(0)
-
+    
+        # ── 收集每个文件的输出路径（支持自主命名） ─────
+        self._output_paths = []
+        for i, file_path in enumerate(self._file_paths):
+            base_name = os.path.splitext(os.path.basename(file_path))[0]
+            default_name = f"{base_name}_\u538b\u7f29_{self._quality}.pdf"
+    
+            save_path, _ = QFileDialog.getSaveFileName(
+                self,
+                f"\u4fdd\u5b58\u538b\u7f29\u7ed3\u679c ({i + 1}/{total})",
+                os.path.join(os.path.expanduser("~/Desktop"), default_name),
+                "PDF \u6587\u4ef6 (*.pdf)"
+            )
+            if not save_path:
+                # \u7528\u6237\u53d6\u6d88\uff0c\u4e2d\u6b62\u6574\u4e2a\u64cd\u4f5c
+                self._is_busy = False
+                self.ui.btnStartBatch.setEnabled(True)
+                self.ui.btnSelectFile.setEnabled(True)
+                self.ui.btnClearAll.setEnabled(True)
+                self.ui.lblProgressText.setText("")
+                return
+    
+            # \u786e\u4fdd\u540e\u7f00\u4e3a .pdf
+            if not save_path.lower().endswith(".pdf"):
+                save_path += ".pdf"
+            self._output_paths.append(save_path)
+    
         for i in range(self.ui.fileList.count()):
             item = self.ui.fileList.item(i)
             if item.data(_FILE_STATUS_ROLE) != "waiting":
                 item.setData(_FILE_STATUS_ROLE, "waiting")
                 path = item.data(_FILE_PATH_ROLE)
                 size_str = self._format_size(item.data(_FILE_SIZE_ROLE))
-                item.setText(f"⏳ {os.path.basename(path)}  |  {size_str}")
-
+                item.setText(f"\u23f3 {os.path.basename(path)}  |  {size_str}")
+    
         self._current_index = 0
         self._process_next()
 
@@ -545,11 +563,10 @@ class CompressPage(QWidget):
         if self._current_index >= len(self._file_paths):
             self._on_batch_done()
             return
-
+    
         file_path = self._file_paths[self._current_index]
         item = self.ui.fileList.item(self._current_index)
-        base_name = os.path.splitext(os.path.basename(file_path))[0]
-        output_path = os.path.join(self._output_dir, f"{base_name}_压缩_{self._quality}.pdf")
+        output_path = self._output_paths[self._current_index]
 
         item.setText(f"⚙️ {os.path.basename(file_path)}  |  压缩中...")
         item.setData(_FILE_STATUS_ROLE, "processing")

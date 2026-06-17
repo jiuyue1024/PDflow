@@ -2109,7 +2109,7 @@ class TemplateEditorPage(QWidget):
 
         self.formContainer = QWidget()
         self.formContainer.setObjectName("formContainer")
-        self.formContainer.setStyleSheet("background-color: {t('bg_tertiary')};")
+        self.formContainer.setStyleSheet(f"background-color: {t('bg_tertiary')};")
         self.formLayout = QVBoxLayout(self.formContainer)
         self.formLayout.setSpacing(20)
         self.formLayout.setContentsMargins(24, 16, 24, 16)
@@ -2559,7 +2559,7 @@ class TemplateEditorPage(QWidget):
         theme_cfg = style_options.get("theme_color", {})
         if theme_cfg:
             theme_label = QLabel(theme_cfg.get("label", "主题色"))
-            theme_label.setStyleSheet("color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
+            theme_label.setStyleSheet(f"color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
             style_layout.addWidget(theme_label)
 
             theme_btn_layout = QHBoxLayout()
@@ -2599,7 +2599,7 @@ class TemplateEditorPage(QWidget):
         bar_cfg = style_options.get("bar_position", {})
         if bar_cfg:
             bar_label = QLabel(bar_cfg.get("label", "装饰条位置"))
-            bar_label.setStyleSheet("color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
+            bar_label.setStyleSheet(f"color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
             style_layout.addWidget(bar_label)
 
             bar_btn_layout = QHBoxLayout()
@@ -2626,7 +2626,7 @@ class TemplateEditorPage(QWidget):
         bg_cfg = style_options.get("bg_style", {})
         if bg_cfg:
             bg_label = QLabel(bg_cfg.get("label", "背景样式"))
-            bg_label.setStyleSheet("color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
+            bg_label.setStyleSheet(f"color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
             style_layout.addWidget(bg_label)
 
             bg_btn_layout = QHBoxLayout()
@@ -2661,11 +2661,11 @@ class TemplateEditorPage(QWidget):
         # ── 自定义背景颜色 ──
         sep1 = QFrame()
         sep1.setFrameShape(QFrame.HLine)
-        sep1.setStyleSheet("background-color: {t('border_secondary')}; max-height: 1px;")
+        sep1.setStyleSheet(f"background-color: {t('border_secondary')}; max-height: 1px;")
         style_layout.addWidget(sep1)
 
         custom_bg_label = QLabel("自定义背景色")
-        custom_bg_label.setStyleSheet("color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
+        custom_bg_label.setStyleSheet(f"color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
         style_layout.addWidget(custom_bg_label)
 
         custom_bg_row = QHBoxLayout()
@@ -2715,18 +2715,18 @@ class TemplateEditorPage(QWidget):
         # ── 字体颜色 ──
         font_color_sep = QFrame()
         font_color_sep.setFrameShape(QFrame.HLine)
-        font_color_sep.setStyleSheet("background-color: {t('border_secondary')}; max-height: 1px;")
+        font_color_sep.setStyleSheet(f"background-color: {t('border_secondary')}; max-height: 1px;")
         style_layout.addWidget(font_color_sep)
 
         font_color_label = QLabel("字体颜色")
-        font_color_label.setStyleSheet("color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
+        font_color_label.setStyleSheet(f"color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
         style_layout.addWidget(font_color_label)
 
         font_color_row = QHBoxLayout()
         font_color_row.setSpacing(8)
 
         self.textColorLabel = QLabel("文字:")
-        self.textColorLabel.setStyleSheet("color: {t('text_tertiary')}; font-size: 11px; background-color: transparent;")
+        self.textColorLabel.setStyleSheet(f"color: {t('text_tertiary')}; font-size: 11px; background-color: transparent;")
         self.textColorLabel.setFixedWidth(40)
         font_color_row.addWidget(self.textColorLabel)
 
@@ -2773,7 +2773,7 @@ class TemplateEditorPage(QWidget):
         font_color_row.addSpacing(20)
 
         self.secondaryColorLabel = QLabel("次要:")
-        self.secondaryColorLabel.setStyleSheet("color: {t('text_tertiary')}; font-size: 11px; background-color: transparent;")
+        self.secondaryColorLabel.setStyleSheet(f"color: {t('text_tertiary')}; font-size: 11px; background-color: transparent;")
         self.secondaryColorLabel.setFixedWidth(40)
         font_color_row.addWidget(self.secondaryColorLabel)
 
@@ -2825,7 +2825,7 @@ class TemplateEditorPage(QWidget):
         texture_cfg = style_options.get("bg_texture", {})
         if texture_cfg:
             texture_label = QLabel(texture_cfg.get("label", "背景纹理"))
-            texture_label.setStyleSheet("color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
+            texture_label.setStyleSheet(f"color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
             style_layout.addWidget(texture_label)
 
             texture_btn_layout = QHBoxLayout()
@@ -2850,11 +2850,11 @@ class TemplateEditorPage(QWidget):
         # ── 背景图片上传 ──
         sep2 = QFrame()
         sep2.setFrameShape(QFrame.HLine)
-        sep2.setStyleSheet("background-color: {t('border_secondary')}; max-height: 1px;")
+        sep2.setStyleSheet(f"background-color: {t('border_secondary')}; max-height: 1px;")
         style_layout.addWidget(sep2)
 
         bg_img_label = QLabel("背景图片")
-        bg_img_label.setStyleSheet("color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
+        bg_img_label.setStyleSheet(f"color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
         style_layout.addWidget(bg_img_label)
 
         bg_img_row = QHBoxLayout()
@@ -2873,7 +2873,7 @@ class TemplateEditorPage(QWidget):
         bg_img_row.addWidget(self.bgImageBtn)
 
         self.bgImageLabel = QLabel("未选择")
-        self.bgImageLabel.setStyleSheet("color: {t('text_muted')}; font-size: 11px; background-color: transparent;")
+        self.bgImageLabel.setStyleSheet(f"color: {t('text_muted')}; font-size: 11px; background-color: transparent;")
         bg_img_row.addWidget(self.bgImageLabel)
 
         clear_bg_img_btn = QPushButton("清除")
@@ -2894,7 +2894,7 @@ class TemplateEditorPage(QWidget):
         opacity_row = QHBoxLayout()
         opacity_row.setSpacing(8)
         opacity_label = QLabel("透明度:")
-        opacity_label.setStyleSheet("color: {t('text_tertiary')}; font-size: 12px; background-color: transparent;")
+        opacity_label.setStyleSheet(f"color: {t('text_tertiary')}; font-size: 12px; background-color: transparent;")
         opacity_label.setFixedWidth(50)
         opacity_row.addWidget(opacity_label)
         self.bgOpacitySlider = QSlider(Qt.Horizontal)
@@ -2916,7 +2916,7 @@ class TemplateEditorPage(QWidget):
         self.bgOpacitySlider.valueChanged.connect(self._on_bg_opacity_changed)
         opacity_row.addWidget(self.bgOpacitySlider)
         self.bgOpacityVal = QLabel(f"{self._bg_image_opacity}%")
-        self.bgOpacityVal.setStyleSheet("color: {t('text_secondary')}; font-size: 11px; background-color: transparent;")
+        self.bgOpacityVal.setStyleSheet(f"color: {t('text_secondary')}; font-size: 11px; background-color: transparent;")
         self.bgOpacityVal.setFixedWidth(36)
         opacity_row.addWidget(self.bgOpacityVal)
         opacity_row.addStretch()
@@ -2929,7 +2929,7 @@ class TemplateEditorPage(QWidget):
         font_style_cfg = style_options.get("font_style", {})
         if font_style_cfg:
             font_style_label = QLabel(font_style_cfg.get("label", "字体风格"))
-            font_style_label.setStyleSheet("color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
+            font_style_label.setStyleSheet(f"color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
             self.formLayout.addWidget(font_style_label)
 
             font_style_btn_layout = QHBoxLayout()
@@ -2957,7 +2957,7 @@ class TemplateEditorPage(QWidget):
         header_style_cfg = style_options.get("header_style", {})
         if header_style_cfg:
             header_style_label = QLabel(header_style_cfg.get("label", "标题栏样式"))
-            header_style_label.setStyleSheet("color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
+            header_style_label.setStyleSheet(f"color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
             self.formLayout.addWidget(header_style_label)
 
             header_style_btn_layout = QHBoxLayout()
@@ -2985,7 +2985,7 @@ class TemplateEditorPage(QWidget):
         table_style_cfg = style_options.get("table_style", {})
         if table_style_cfg:
             table_style_label = QLabel(table_style_cfg.get("label", "表格样式"))
-            table_style_label.setStyleSheet("color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
+            table_style_label.setStyleSheet(f"color: {t('text_secondary')}; font-size: 12px; background-color: transparent;")
             self.formLayout.addWidget(table_style_label)
 
             table_style_btn_layout = QHBoxLayout()
@@ -3160,13 +3160,13 @@ class TemplateEditorPage(QWidget):
             self._bg_image_path = path
             fname = os.path.basename(path)
             self.bgImageLabel.setText(fname)
-            self.bgImageLabel.setStyleSheet("color: {t('text_primary')}; font-size: 11px; background-color: transparent;")
+            self.bgImageLabel.setStyleSheet(f"color: {t('text_primary')}; font-size: 11px; background-color: transparent;")
             self.preview_timer.start(300)
 
     def _on_clear_bg_image(self):
         self._bg_image_path = None
         self.bgImageLabel.setText("未选择")
-        self.bgImageLabel.setStyleSheet("color: {t('text_muted')}; font-size: 11px; background-color: transparent;")
+        self.bgImageLabel.setStyleSheet(f"color: {t('text_muted')}; font-size: 11px; background-color: transparent;")
         self.preview_timer.start(300)
 
     def _on_bg_opacity_changed(self, value: int):
@@ -5310,6 +5310,82 @@ class TemplateEditorPage(QWidget):
                 f'</body></html>'
             )
 
+    def _build_default_filename(self, data: dict) -> str:
+        """根据模板类型和表单数据构建有意义的默认文件名
+
+        Args:
+            data: 已收集的表单数据
+
+        Returns:
+            默认文件名（不含路径，含 .pdf 后缀）
+        """
+        import re
+
+        template_id = self.template_data.get("id", "")
+        template_name = self.template_data.get("name", "模板")
+
+        # 根据模板类型从表单数据中提取关键信息
+        meaningful_part = ""
+
+        if template_id == "business_card":
+            # 名片：用姓名或公司名
+            name = data.get("name_cn", "").strip()
+            company = data.get("company", "").strip()
+            if name:
+                meaningful_part = name
+            elif company:
+                meaningful_part = company
+
+        elif template_id == "contract":
+            # 合同：用合同标题或甲乙方
+            title = data.get("title", "").strip()
+            party_a = data.get("party_a", "").strip()
+            party_b = data.get("party_b", "").strip()
+            if title:
+                meaningful_part = title
+            elif party_a and party_b:
+                meaningful_part = f"{party_a}-{party_b}"
+
+        elif template_id == "invoice":
+            # 发票：用票据标题或编号
+            title = data.get("title", "").strip()
+            invoice_no = data.get("invoice_no", "").strip()
+            if invoice_no:
+                meaningful_part = invoice_no
+            elif title:
+                meaningful_part = title
+
+        elif template_id == "notice":
+            # 公告：用公告标题
+            title = data.get("title", "").strip()
+            if title:
+                meaningful_part = title
+
+        elif template_id == "report":
+            # 报告：用报告标题
+            title = data.get("title", "").strip()
+            if title:
+                meaningful_part = title
+
+        elif template_id == "product_spec":
+            # 产品规格：用产品名称
+            product_name = data.get("product_name", "").strip()
+            if product_name:
+                meaningful_part = product_name
+
+        if not meaningful_part:
+            meaningful_part = template_name
+
+        # 清理文件名：移除非法字符，限制长度
+        meaningful_part = re.sub(r'[\\/:*?"<>|]', '', meaningful_part).strip()
+        if not meaningful_part:
+            meaningful_part = template_name
+
+        if len(meaningful_part) > 60:
+            meaningful_part = meaningful_part[:60]
+
+        return f"{meaningful_part}.pdf"
+
     # ── PDF 生成 ──────────────────────────────────────────────
     def _generate_pdf(self):
         if not self.template_data:
@@ -5359,21 +5435,23 @@ class TemplateEditorPage(QWidget):
                 widget.setFocus()
                 return
 
-        # ── TPL-06：弹出文件夹选择对话框 ──────────────────────
-        default_dir = os.path.expanduser("~/Desktop")
-        save_dir = QFileDialog.getExistingDirectory(
+        # ── TPL-06：弹出保存文件对话框（支持自定义文件名） ──
+        # 构建有意义的默认文件名（基于表单数据）
+        default_name = self._build_default_filename(data)
+
+        save_path, _ = QFileDialog.getSaveFileName(
             self,
-            "选择保存位置",
-            default_dir,
-            QFileDialog.Option.ShowDirsOnly,
+            "保存 PDF",
+            os.path.join(os.path.expanduser("~/Desktop"), default_name),
+            "PDF 文件 (*.pdf)"
         )
-        if not save_dir:
-            # 用户取消选择
+        if not save_path:
             return
 
-        from datetime import datetime
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = os.path.join(save_dir, f"{self.template_id}_{timestamp}.pdf")
+        # 确保文件名以 .pdf 结尾
+        if not save_path.lower().endswith(".pdf"):
+            save_path += ".pdf"
+        output_path = save_path
 
         template_id = self.template_data.get("id", "")
         try:
@@ -5543,7 +5621,7 @@ class TemplateEditorPage(QWidget):
         # 重置背景图片
         if hasattr(self, 'bgImageLabel'):
             self.bgImageLabel.setText("未选择")
-            self.bgImageLabel.setStyleSheet("color: {t('text_muted')}; font-size: 11px; background-color: transparent;")
+            self.bgImageLabel.setStyleSheet(f"color: {t('text_muted')}; font-size: 11px; background-color: transparent;")
 
         # 重置背景透明度滑块
         if hasattr(self, 'bgOpacitySlider'):

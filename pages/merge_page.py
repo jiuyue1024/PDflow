@@ -350,17 +350,19 @@ class SplitWorker(QThread):
     finished = Signal(dict)
     error = Signal(str)
 
-    def __init__(self, filepath, output_dir, mode, range_str=None):
+    def __init__(self, filepath, output_dir, mode, range_str=None, prefix=None):
         super().__init__()
         self._filepath = filepath
         self._output_dir = output_dir
         self._mode = mode
         self._range_str = range_str
+        self._prefix = prefix
 
     def run(self):
         try:
             result = split_pdf(self._filepath, self._output_dir,
-                               mode=self._mode, range_str=self._range_str)
+                               mode=self._mode, range_str=self._range_str,
+                               prefix=self._prefix)
             self.finished.emit(result)
         except Exception as e:
             self.error.emit(str(e))
@@ -452,6 +454,17 @@ class MergePage(QWidget):
         self._split_ranges_input.setStyleSheet(LINEEDIT_STYLE)
         sp_lay.addWidget(self._split_ranges_input)
 
+        # 输出文件名前缀（拆分自定义命名）
+        prefix_row = QHBoxLayout()
+        self._lbl_prefix = QLabel(_tr("文件名前缀"))
+        self._lbl_prefix.setStyleSheet("color: #848E9C; font-size: 13px;")
+        prefix_row.addWidget(self._lbl_prefix)
+        self._split_prefix_input = QLineEdit()
+        self._split_prefix_input.setPlaceholderText(_tr("默认使用源文件名"))
+        self._split_prefix_input.setStyleSheet(LINEEDIT_STYLE)
+        prefix_row.addWidget(self._split_prefix_input, stretch=1)
+        sp_lay.addLayout(prefix_row)
+
         self._split_params.setVisible(False)
         self.ui.bottomLayout.insertWidget(
             self.ui.bottomLayout.indexOf(self.ui.btnMergePdf),
@@ -473,6 +486,8 @@ class MergePage(QWidget):
         self._lbl_every_prefix.setText(_tr("每"))
         self._lbl_every_suffix.setText(_tr("页为一份"))
         self._split_ranges_input.setPlaceholderText(_tr("如：1-3, 4-6, 7-10"))
+        self._lbl_prefix.setText(_tr("文件名前缀"))
+        self._split_prefix_input.setPlaceholderText(_tr("默认使用源文件名"))
 
         self._update_file_ui()
         self._update_mode_ui()
@@ -785,12 +800,15 @@ class MergePage(QWidget):
         self._status_lbl.setStyleSheet("color: #4D7CFE; font-size: 13px;")
         self.ui.btnMergePdf.setEnabled(False)
 
+        # 获取用户自定义的文件名前缀
+        prefix = self._split_prefix_input.text().strip() or None
+
         if mode_id == 1:
-            self._split_worker = SplitWorker(input_path, output_dir, mode="page")
+            self._split_worker = SplitWorker(input_path, output_dir, mode="page", prefix=prefix)
         else:
             ranges = self._split_ranges_input.text().strip()
             self._split_worker = SplitWorker(
-                input_path, output_dir, mode="range", range_str=ranges
+                input_path, output_dir, mode="range", range_str=ranges, prefix=prefix
             )
 
         self._split_worker.finished.connect(self._on_split_done)
@@ -948,6 +966,8 @@ class MergePage(QWidget):
             f"QLineEdit:focus {{ border: 1px solid {colors['primary']}; }}"
         )
         self._split_ranges_input.setStyleSheet(lineedit_style)
+        self._split_prefix_input.setStyleSheet(lineedit_style)
+        self._lbl_prefix.setStyleSheet(f"color: {colors['text_sub']}; font-size: 13px;")
 
         # 更新文件列表项的颜色
         self._update_file_item_themes(colors)

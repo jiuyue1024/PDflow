@@ -181,7 +181,7 @@ def _setup_about_button(ui):
     separator.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
     # ── "关于"按钮（纯 QPushButton，避免内嵌 QLabel 的 QSS 兼容问题）──
-    btn_about = QPushButton(_tr("关于印流PDflow") + "  V1.1-beta")
+    btn_about = QPushButton(_tr("关于印流PDflow") + "  V1.2")
     btn_about.setObjectName("btnAbout")
     btn_about.setCheckable(False)
     btn_about.setCursor(Qt.PointingHandCursor)
@@ -564,7 +564,8 @@ def _connect_template_signals(ui, theme_mgr):
             theme_mgr.register_page(editor_page_ref[0])
 
             # 立即应用当前主题（覆盖 __init__ 中硬编码的深色模式）
-            cur_theme = get_current_theme()
+            # 优先使用 ThemeManager 内存状态，避免配置文件读取失败
+            cur_theme = theme_mgr.current_theme if theme_mgr else get_current_theme()
             cur_colors = DARK_COLORS if cur_theme == "dark" else LIGHT_COLORS
             editor_page_ref[0].apply_theme(cur_colors)
         else:
@@ -572,7 +573,7 @@ def _connect_template_signals(ui, theme_mgr):
             editor_page_ref[0].load_template(template_id)
 
             # load_template 重建了表单控件（又用了深色硬编码），需重新应用主题
-            cur_theme = get_current_theme()
+            cur_theme = theme_mgr.current_theme if theme_mgr else get_current_theme()
             cur_colors = DARK_COLORS if cur_theme == "dark" else LIGHT_COLORS
             editor_page_ref[0].apply_theme(cur_colors)
 
@@ -635,8 +636,8 @@ def _show_about_dialog():
     )
     from PySide6.QtGui import QPixmap, QFont
 
-    # ── 读取当前主题色 ──
-    cur_theme = get_current_theme()
+    # ── 读取当前主题色（优先用 ThemeManager 内存状态）──
+    cur_theme = theme_mgr.current_theme if theme_mgr else get_current_theme()
     cur_colors = DARK_COLORS if cur_theme == "dark" else LIGHT_COLORS
 
     bg = cur_colors['bg']
@@ -713,7 +714,7 @@ def _show_about_dialog():
     version_row.setSpacing(8)
     version_row.setAlignment(Qt.AlignVCenter)
 
-    ver_badge = QLabel("V1.1-beta")
+    ver_badge = QLabel("V1.2")
     ver_badge.setObjectName("aboutVersionBadge")
     ver_badge.setAlignment(Qt.AlignCenter)
     ver_badge.setFixedHeight(22)
@@ -1329,7 +1330,7 @@ def main():
     tray_icon = None
     if QSystemTrayIcon.isSystemTrayAvailable():
         tray_icon = QSystemTrayIcon(QIcon(icon_path), app)
-        tray_icon.setToolTip("印流PDflow V1.1-RC2")
+        tray_icon.setToolTip("印流PDflow V1.2")
 
         tray_menu = QMenu()
 

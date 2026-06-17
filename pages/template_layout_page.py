@@ -8,7 +8,7 @@ import sys
 import os
 import json
 
-from PySide6.QtCore import Qt, QSize, Signal
+from PySide6.QtCore import Qt, QSize, Signal, QEvent
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton, QFrame, QScrollArea,
@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QFont
 
 from src.common.paths import resource_path
+from src.common.theme import get_colors, get_current_theme
 from translations.translation_manager import _ as _tr
 
 
@@ -36,11 +37,7 @@ class Ui_TemplateLayoutPage(object):
             TemplateLayoutPage.setObjectName("TemplateLayoutPage")
         TemplateLayoutPage.resize(1280, 820)
         TemplateLayoutPage.setMinimumSize(QSize(960, 600))
-        TemplateLayoutPage.setStyleSheet(
-            "QWidget#TemplateLayoutPage {\n"
-            "    background-color: #0A0A0F;\n"
-            "}\n"
-        )
+        # 背景色由 apply_theme 管理，setupUi 不硬编码
 
         self.mainLayout = QVBoxLayout(TemplateLayoutPage)
         self.mainLayout.setSpacing(16)
@@ -49,9 +46,6 @@ class Ui_TemplateLayoutPage(object):
         # 顶部标题
         self.pageTitle = QLabel("模板排版")
         self.pageTitle.setObjectName("pageTitle")
-        self.pageTitle.setStyleSheet(
-            "color: #EAECEF; font-size: 24px; font-weight: 700;"
-        )
         self.mainLayout.addWidget(self.pageTitle)
 
         # 滚动区域
@@ -59,23 +53,9 @@ class Ui_TemplateLayoutPage(object):
         self.templateScrollArea.setObjectName("templateScrollArea")
         self.templateScrollArea.setWidgetResizable(True)
         self.templateScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.templateScrollArea.setStyleSheet(
-            "QScrollArea#templateScrollArea { background-color: transparent; border: none; }\n"
-            "QScrollArea#templateScrollArea > QWidget > QWidget { background-color: transparent; }\n"
-            "QScrollArea#templateScrollArea QScrollBar:vertical {\n"
-            "    background-color: #0A0A0F; width: 8px; border-radius: 4px;\n"
-            "}\n"
-            "QScrollArea#templateScrollArea QScrollBar::handle:vertical {\n"
-            "    background-color: #1E1E28; border-radius: 4px; min-height: 40px;\n"
-            "}\n"
-            "QScrollArea#templateScrollArea QScrollBar::handle:vertical:hover {\n"
-            "    background-color: #2B3139;\n"
-            "}"
-        )
 
         self.scrollContent = QWidget()
         self.scrollContent.setObjectName("scrollContent")
-        self.scrollContent.setStyleSheet("QWidget#scrollContent { background-color: transparent; }")
         self.scrollContentLayout = QVBoxLayout(self.scrollContent)
         self.scrollContentLayout.setSpacing(16)
         self.scrollContentLayout.setContentsMargins(0, 0, 0, 0)
@@ -85,7 +65,6 @@ class Ui_TemplateLayoutPage(object):
         self.emptyHint.setObjectName("emptyHint")
         self.emptyHint.setAlignment(Qt.AlignCenter)
         self.emptyHint.setWordWrap(True)
-        self.emptyHint.setStyleSheet("color: #4A4B56; font-size: 15px;")
         self.emptyHint.setMinimumHeight(200)
         self.emptyHint.setVisible(False)
         self.scrollContentLayout.addWidget(self.emptyHint)
@@ -109,7 +88,6 @@ class Ui_TemplateLayoutPage(object):
         self.footerLabel = QLabel("共 0 个可用模板")
         self.footerLabel.setObjectName("footerLabel")
         self.footerLabel.setAlignment(Qt.AlignCenter)
-        self.footerLabel.setStyleSheet("color: #848E9C; font-size: 13px;")
         self.mainLayout.addWidget(self.footerLabel)
 
     def retranslateUi(self, TemplateLayoutPage):
@@ -129,19 +107,10 @@ class TemplateEntryDialog(QDialog):
         self.setWindowTitle(_tr("进入模板编辑"))
         self.setFixedSize(400, 180)
 
-        # 如果未传入主题色，使用默认深色
+        # 如果未传入主题色，从全局主题系统获取当前主题色
         if theme_colors is None:
-            theme_colors = {
-                "bg": "#0B0E11",
-                "card_bg": "#14141A",
-                "border": "#1E1E28",
-                "border_light": "#1E1E28",
-                "text_main": "#EAECEF",
-                "text_sub": "#848E9C",
-                "text_muted": "#4A4B56",
-                "primary": "#4D7CFE",
-                "input_bg": "#0A0A0F",
-            }
+            from src.common.theme import get_colors, get_current_theme
+            theme_colors = get_colors(get_current_theme())
 
         self.setStyleSheet(
             f"QDialog {{\n"
@@ -182,7 +151,7 @@ class TemplateEntryDialog(QDialog):
             f"    min-height: 36px;\n"
             f"}}\n"
             f"QPushButton#dialogCancelBtn:hover {{\n"
-            f"    background-color: {theme_colors['hover_bg'] if 'hover_bg' in theme_colors else '#1E2330'};\n"
+            f"    background-color: {theme_colors.get('hover_bg', '#1A1A22')};\n"
             f"}}"
         )
         cancel_btn.clicked.connect(self.reject)
@@ -201,10 +170,10 @@ class TemplateEntryDialog(QDialog):
             f"    min-height: 36px;\n"
             f"}}\n"
             f"QPushButton#dialogStartBtn:hover {{\n"
-            f"    background-color: #3D6CF0;\n"
+            f"    background-color: {theme_colors.get('primary_hover', '#3D6CF0')};\n"
             f"}}\n"
             f"QPushButton#dialogStartBtn:pressed {{\n"
-            f"    background-color: #3560E0;\n"
+            f"    background-color: {theme_colors.get('primary_pressed', '#2D5CD0')};\n"
             f"}}"
         )
         start_btn.clicked.connect(self.accept)
@@ -235,6 +204,9 @@ class TemplateLayoutPage(QWidget):
 
         # 加载模板列表
         self.load_templates()
+
+        # 立即应用当前主题（覆盖 setupUi 中的无色占位样式）
+        self.apply_theme(get_colors(get_current_theme()))
 
     # ── 模板加载与卡片 ──
     def load_templates(self):
@@ -314,13 +286,7 @@ class TemplateLayoutPage(QWidget):
         card.setMaximumSize(QSize(480, 220))
         card.setStyleSheet(
             "QFrame#card {\n"
-            "    background-color: #14141A;\n"
-            "    border: 1px solid #1E1E28;\n"
             "    border-radius: 8px;\n"
-            "}\n"
-            "QFrame#card:hover {\n"
-            "    background-color: #1A1A22;\n"
-            "    border: 1px solid #4D7CFE;\n"
             "}"
         )
         card.setCursor(Qt.PointingHandCursor)
@@ -339,7 +305,7 @@ class TemplateLayoutPage(QWidget):
         name = template_data.get("name", _tr("未命名模板"))
         name_label = QLabel(name)
         name_label.setStyleSheet(
-            "background-color: transparent; color: #EAECEF; font-size: 15px; font-weight: 600;"
+            "background-color: transparent; font-size: 15px; font-weight: 600;"
         )
         layout.addWidget(name_label)
 
@@ -348,7 +314,7 @@ class TemplateLayoutPage(QWidget):
         desc_label = QLabel(desc)
         desc_label.setWordWrap(True)
         desc_label.setStyleSheet(
-            "background-color: transparent; color: #848E9C; font-size: 12px;"
+            "background-color: transparent; font-size: 12px;"
         )
         layout.addWidget(desc_label)
 
@@ -364,8 +330,6 @@ class TemplateLayoutPage(QWidget):
         tpl_type = template_data.get("type", "通用")
         type_label = QLabel(tpl_type)
         type_label.setStyleSheet(
-            "background-color: rgba(77, 124, 254, 0.12);\n"
-            "color: #4D7CFE;\n"
             "font-size: 11px;\n"
             "font-weight: 500;\n"
             "padding: 3px 10px;\n"
@@ -383,6 +347,7 @@ class TemplateLayoutPage(QWidget):
         card._name_label = name_label
         card._desc_label = desc_label
         card._type_label = type_label
+        card._icon_label = icon_label
 
         def _apply_card_theme(colors):
             card.setStyleSheet(
@@ -395,6 +360,9 @@ class TemplateLayoutPage(QWidget):
                 f"    background-color: {colors['hover_bg']};\n"
                 f"    border: 1px solid {colors['primary']};\n"
                 f"}}"
+            )
+            icon_label.setStyleSheet(
+                f"background-color: transparent; color: {colors['text_main']}; font-size: 36px;"
             )
             name_label.setStyleSheet(
                 f"background-color: transparent; color: {colors['card_title']}; font-size: 15px; font-weight: 600;"
@@ -462,44 +430,70 @@ class TemplateLayoutPage(QWidget):
             self.ui.footerLabel.setText(_tr("共 {} 个可用模板").format(count))
         if self._templates:
             self._build_card_grid()
+            # _build_card_grid 重建了卡片（无色），重新应用主题
+            if hasattr(self, '_theme_colors') and self._theme_colors:
+                self._apply_card_themes(self._theme_colors)
 
     def apply_theme(self, colors):
         """ThemeManager 主题切换时更新页面内联样式"""
         self._theme_colors = colors
-        # 页面背景
-        self.setStyleSheet(
-            f"TemplateLayoutPage {{\n"
+        # 构建单一综合样式表，覆盖所有页面元素
+        full_style = (
+            # 页面背景（使用 objectName 选择器，与 merge_page 保持一致）
+            f"QWidget#TemplateLayoutPage {{\n"
             f"    background-color: {colors['bg']};\n"
             f"}}\n"
-        )
-        # 标题
-        self.ui.pageTitle.setStyleSheet(
-            f"color: {colors['text_main']}; font-size: 24px; font-weight: 700;"
-        )
-        # 滚动区域
-        self.ui.templateScrollArea.setStyleSheet(
-            f"QScrollArea#templateScrollArea {{ background-color: transparent; border: none; }}\n"
-            f"QScrollArea#templateScrollArea > QWidget > QWidget {{ background-color: transparent; }}\n"
-            f"QScrollArea#templateScrollArea QScrollBar:vertical {{\n"
-            f"    background-color: {colors['bg']}; width: 8px; border-radius: 4px;\n"
+            # 页面标题
+            f"QLabel#pageTitle {{\n"
+            f"    color: {colors['text_main']};\n"
+            f"    font-size: 24px;\n"
+            f"    font-weight: 700;\n"
             f"}}\n"
-            f"QScrollArea#templateScrollArea QScrollBar::handle:vertical {{\n"
-            f"    background-color: {colors['scrollbar_bg']}; border-radius: 4px; min-height: 40px;\n"
+            # 滚动区域（透明背景 + 无边框）
+            f"QScrollArea#templateScrollArea {{"
+            f"    background-color: transparent; border: none;\n"
             f"}}\n"
-            f"QScrollArea#templateScrollArea QScrollBar::handle:vertical:hover {{\n"
+            f"QScrollArea#templateScrollArea > QWidget > QWidget {{"
+            f"    background-color: transparent;\n"
+            f"}}\n"
+            # 滚动条轨道
+            f"QScrollArea#templateScrollArea QScrollBar:vertical {{"
+            f"    background-color: {colors['bg']};\n"
+            f"    width: 8px; border-radius: 4px;\n"
+            f"}}\n"
+            # 滚动条滑块
+            f"QScrollArea#templateScrollArea QScrollBar::handle:vertical {{"
+            f"    background-color: {colors['scrollbar_bg']};\n"
+            f"    border-radius: 4px; min-height: 40px;\n"
+            f"}}\n"
+            # 滚动条滑块悬停
+            f"QScrollArea#templateScrollArea QScrollBar::handle:vertical:hover {{"
             f"    background-color: {colors['scrollbar_hover']};\n"
+            f"}}\n"
+            # 空状态提示文字
+            f"QLabel#emptyHint {{"
+            f"    color: {colors['text_muted']};\n"
+            f"    font-size: 15px;\n"
+            f"}}\n"
+            # 底部状态文字
+            f"QLabel#footerLabel {{"
+            f"    color: {colors['text_sub']};\n"
+            f"    font-size: 13px;\n"
             f"}}"
         )
-        # 空状态提示
-        self.ui.emptyHint.setStyleSheet(
-            f"color: {colors['text_muted']}; font-size: 15px;"
-        )
-        # 底部状态文字
-        self.ui.footerLabel.setStyleSheet(
-            f"color: {colors['text_sub']}; font-size: 13px;"
-        )
-        # 更新已创建的卡片
+        # 一次性应用到页面自身（覆盖所有子控件样式）
+        self.setStyleSheet(full_style)
+        # 更新已创建的卡片（卡片各自有独立的 setStyleSheet）
         self._apply_card_themes(colors)
+
+    def showEvent(self, event):
+        """每次页面变为可见时，重新应用主题（防止 QSS 渲染缓存导致残留）"""
+        super().showEvent(event)
+        if hasattr(self, '_theme_colors') and self._theme_colors:
+            # 重新应用全量主题（覆盖页面背景、标题、滚动区、卡片等所有元素）
+            self.apply_theme(self._theme_colors)
+            # 强制样式刷新
+            self.refresh_style()
 
     def _apply_card_themes(self, colors):
         """更新所有模板卡片的内联样式"""

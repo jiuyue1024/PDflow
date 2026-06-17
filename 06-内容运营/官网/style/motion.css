@@ -1,0 +1,91 @@
+/* ============================================
+   PDflow — motion.css
+   Reveal · Parallax · CountUp · Glow · Cursor
+   ============================================ */
+
+/* Reveal System */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity var(--dur) var(--ease-out),transform var(--dur) var(--ease-out);will-change:opacity,transform}
+.reveal.r-visible{opacity:1;transform:translateY(0)}
+.r-1{transition-delay:.05s}.r-2{transition-delay:.1s}.r-3{transition-delay:.15s}.r-4{transition-delay:.2s}.r-5{transition-delay:.25s}.r-6{transition-delay:.3s}
+
+/* Scale Reveal */
+.s-reveal{opacity:0;transform:scale(.92);transition:opacity 800ms var(--ease-out),transform 800ms var(--ease-out)}
+.s-reveal.s-visible{opacity:1;transform:scale(1)}
+
+/* Hero subtitle floating */
+.hero-sub{animation:fadeUp 700ms var(--ease-out) 200ms both}
+.hero-acts{animation:fadeUp 700ms var(--ease-out) 350ms both}
+.hero-rating{animation:fadeUp 700ms var(--ease-out) 500ms both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* Hero floating elements — gentle float */
+.hero-floating{animation:float 4s var(--ease-out) infinite}
+.f1{animation-delay:0s}.f2{animation-delay:-1.3s}.f3{animation-delay:-2.6s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+/* Hero main window — entrance */
+.hero-window{animation:windowIn 1000ms var(--ease-out) both}
+@keyframes windowIn{from{opacity:0;transform:rotateY(-5deg) rotateX(3deg) scale(.95)}to{opacity:1;transform:rotateY(-3deg) rotateX(2deg) scale(1)}}
+
+/* Aurora floating animation */
+.aurora-spot{animation:auroraDrift 12s ease-in-out infinite}
+.s1{animation-delay:0s}.s2{animation-delay:-4s;animation-duration:14s}.s3{animation-delay:-8s;animation-duration:10s}
+@keyframes auroraDrift{0%,100%{transform:translate(0,0)}25%{transform:translate(30px,-20px)}50%{transform:translate(-20px,10px)}75%{transform:translate(15px,-10px)}}
+
+/* Mouse tracking cursor light */
+.cursor-light{position:fixed;pointer-events:none;z-index:9998;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.04) 0%,transparent 70%);transform:translate(-50%,-50%);will-change:transform;opacity:0;transition:opacity 300ms var(--ease)}
+.cursor-light.active{opacity:1}
+
+/* CountUp animation */
+.stat-num{will-change:contents;font-variant-numeric:tabular-nums}
+.conv-num{will-change:contents;font-variant-numeric:tabular-nums}
+
+/* Parallax on scroll */
+.parallax{will-change:transform}
+
+/* Bento card entrance stagger */
+.bento-main{animation:cardIn 700ms var(--ease-out) both}
+.bento-sm:nth-child(2){animation:cardIn 700ms var(--ease-out) 80ms both}
+.bento-sm:nth-child(3){animation:cardIn 700ms var(--ease-out) 120ms both}
+.bento-sm:nth-child(4){animation:cardIn 700ms var(--ease-out) 160ms both}
+.bento-sm:nth-child(5){animation:cardIn 700ms var(--ease-out) 200ms both}
+.bento-sm:nth-child(6){animation:cardIn 700ms var(--ease-out) 240ms both}
+@keyframes cardIn{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* Testimonial cards stagger */
+.test-card{animation:cardIn 700ms var(--ease-out) both}
+.test-card:nth-child(1){animation-delay:.05s}
+.test-card:nth-child(2){animation-delay:.15s}
+.test-card:nth-child(3){animation-delay:.25s}
+
+/* Metric cards stagger */
+.stat-card{animation:cardIn 700ms var(--ease-out) both}
+.stat-card:nth-child(1){animation-delay:0s}
+.stat-card:nth-child(2){animation-delay:.08s}
+.stat-card:nth-child(3){animation-delay:.16s}
+.stat-card:nth-child(4){animation-delay:.24s}
+
+/* Flow item stagger */
+.conv-upload,.conv-stage{animation:cardIn 600ms var(--ease-out) both}
+.conv-upload{animation-delay:0s}
+.conv-stage:nth-child(3){animation-delay:.1s}
+.conv-stage:nth-child(5){animation-delay:.2s}
+.conv-stage:nth-child(7){animation-delay:.3s}
+
+/* Toolx card hover glow */
+.toolx-card::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;border-radius:20px;opacity:0;background:radial-gradient(800px circle at var(--mx,50%) var(--my,50%),rgba(139,92,246,.04),transparent 60%);pointer-events:none;transition:opacity 400ms}
+.toolx-card:hover::after{opacity:1}
+
+/* Responsive: disable animations on small screens / reduce motion */
+@media(max-width:768px){
+    .hero-floating{display:none}
+    .cursor-light{display:none}
+    .aurora-spot{opacity:.06}
+}
+@media(prefers-reduced-motion:reduce){
+    .hero-floating,.aurora-spot,.hero-window{animation:none;opacity:1}
+    .hero-sub,.hero-acts,.hero-rating,.reveal,.s-reveal,.bento-main,.bento-sm{animation:none;opacity:1;transform:none}
+    .test-card,.stat-card{animation:none;opacity:1;transform:none}
+    .conv-upload,.conv-stage{animation:none;opacity:1}
+    .cursor-light{display:none}
+}

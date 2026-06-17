@@ -148,7 +148,8 @@ QProgressBar::chunk { background-color: #4D7CFE; border-radius: 3px; }
 # 优先从 pdf_api.py 导入所有转换函数（完整版）
 # pdf_api.py 包含: pdf_to_word, pdf_to_excel, pdf_to_images, images_to_pdf, pdf_to_ppt, batch_convert
 from src.common.pdf_api import (
-    pdf_to_word, pdf_to_excel, pdf_to_images, images_to_pdf, pdf_to_ppt, batch_convert
+    pdf_to_word, pdf_to_excel, pdf_to_images, images_to_pdf, pdf_to_ppt, batch_convert,
+    _check_tesseract_available
 )
 from src.common.recent_files_manager import add_record
 from src.common.error_handler import ErrorHandler, ErrorType
@@ -195,6 +196,9 @@ class ConvertWorker(QThread):
             elif self.func == batch_convert:
                 batch_fmt = self.extra.get("batch_fmt") if self.extra else "pdf"
                 r = self.func(self.inp, self.outp, batch_fmt=batch_fmt)
+            elif self.func == pdf_to_excel:
+                mode = self.extra.get("mode", "advanced") if self.extra else "advanced"
+                r = self.func(self.inp, self.outp, mode=mode)
             else:
                 r = self.func(self.inp, self.outp)
             self.finished.emit(self.idx, r)
@@ -220,6 +224,7 @@ class ConvertPage(QWidget):
             "orientation": "portrait",  # 图片→PDF：方向
             "quality": "high",  # 图片→PDF：质量
             "page_size": "A4",  # 图片→PDF：纸张大小
+            "excel_mode": "advanced",   # PDF→Excel：转换模式
         }
 
         self._init_ui()
@@ -308,6 +313,7 @@ class ConvertPage(QWidget):
         self._param_panels = {}
         self._build_param_panel_pdf_img()   # PDF→图片 参数
         self._build_param_panel_img_pdf()   # 图片→PDF 参数
+        self._build_param_panel_pdf_excel()  # PDF→Excel 参数（v1.2）
         self._build_param_panel_common()    # 通用（无额外参数）
         self._build_param_panel_batch()     # 批量转换 参数
 
@@ -526,6 +532,62 @@ class ConvertPage(QWidget):
 
         self._param_panels["img_pdf"] = panel
 
+    def _build_param_panel_pdf_excel(self):
+        """PDF → Excel 参数面板（v1.2: 转换模式选择）"""
+        panel = QFrame()
+        panel.setStyleSheet("background: transparent; border: none;")
+        vbox = QVBoxLayout(panel)
+        vbox.setSpacing(10)
+        vbox.setContentsMargins(0, 0, 0, 0)
+
+        # 转换模式选择
+        mode_row = QHBoxLayout()
+        mode_row.setSpacing(16)
+
+        self._lbl_excel_mode = QLabel("转换模式：")
+        self._lbl_excel_mode.setStyleSheet("color: #848E9C; font-size: 13px; background: transparent; border: none;")
+        mode_row.addWidget(self._lbl_excel_mode)
+
+        self._excel_mode_group = QButtonGroup()
+        self._rb_standard = QRadioButton("标准模式")
+        self._rb_standard.setStyleSheet("color: #EAECEF; font-size: 13px; background: transparent; border: none;")
+        self._rb_advanced = QRadioButton("高级模式（OCR）")
+        self._rb_advanced.setStyleSheet("color: #EAECEF; font-size: 13px; background: transparent; border: none;")
+        self._rb_advanced.setChecked(True)
+        self._excel_mode_group.addButton(self._rb_standard, 0)
+        self._excel_mode_group.addButton(self._rb_advanced, 1)
+        mode_row.addWidget(self._rb_standard)
+        mode_row.addWidget(self._rb_advanced)
+        mode_row.addStretch()
+        vbox.addLayout(mode_row)
+
+        # Tesseract 状态提示
+        self._lbl_tess_status = QLabel()
+        if _check_tesseract_available():
+            self._lbl_tess_status.setText("✓ OCR 引擎已就绪（RapidOCR）")
+            self._lbl_tess_status.setStyleSheet("color: #34C759; font-size: 12px; background: transparent; border: none;")
+        else:
+            self._lbl_tess_status.setText("⚠ OCR 引擎未安装，高级模式将降级为标准模式")
+            self._lbl_tess_status.setStyleSheet("color: #FF9500; font-size: 12px; background: transparent; border: none;")
+        vbox.addWidget(self._lbl_tess_status)
+
+        # 模式说明
+        self._lbl_excel_hint = QLabel("标准模式：pdfplumber 提取 + 图片嵌入；高级模式：RapidOCR 识别 + 图片提取，消除乱码")
+        self._lbl_excel_hint.setStyleSheet("color: #555; font-size: 12px; background: transparent; border: none;")
+        vbox.addWidget(self._lbl_excel_hint)
+
+        # 连接信号
+        self._excel_mode_group.buttonClicked.connect(self._on_excel_mode_changed)
+
+        self._param_panels["pdf_excel"] = panel
+
+    def _on_excel_mode_changed(self, btn):
+        """切换 PDF→Excel 转换模式"""
+        if btn == self._rb_advanced:
+            self._params["excel_mode"] = "advanced"
+        else:
+            self._params["excel_mode"] = "standard"
+
     def _build_param_panel_common(self):
         """通用参数面板（无额外参数）"""
         panel = QFrame()
@@ -627,6 +689,8 @@ class ConvertPage(QWidget):
             self._show_param_panel("pdf_img")
         elif key == "img_pdf":
             self._show_param_panel("img_pdf")
+        elif key == "pdf_excel":
+            self._show_param_panel("pdf_excel")
         elif key == "batch":
             self._show_param_panel("batch")
         else:
@@ -709,14 +773,31 @@ class ConvertPage(QWidget):
     # ----------------------------------------------------------------
     # 转换逻辑
     # ----------------------------------------------------------------
+    def _get_save_filter(self, conv_type: str) -> str:
+        """根据转换类型返回保存对话框的文件类型过滤"""
+        filters = {
+            "pdf_word": "Word 文档 (*.docx)",
+            "pdf_excel": "Excel 工作簿 (*.xlsx)",
+            "pdf_ppt": "PowerPoint 演示文稿 (*.pptx)",
+            "img_pdf": "PDF 文件 (*.pdf)",
+        }
+        return filters.get(conv_type, "所有文件 (*)")
+    
+    def _get_default_output_name(self, base_name: str) -> str:
+        """根据转换类型生成默认输出文件名（无路径）"""
+        ext_map = {
+            "pdf_word": ".docx",
+            "pdf_excel": ".xlsx",
+            "pdf_ppt": ".pptx",
+            "img_pdf": ".pdf",
+        }
+        ext = ext_map.get(self._selected_type, "")
+        return f"{base_name}{ext}"
+    
     def _start(self):
         if self._busy or not self._paths:
             return
-
-        if not hasattr(self, "_output_dir") or not self._output_dir:
-            self._lbl_status.setText("请先选择输出目录")
-            return
-
+    
         # 获取转换函数
         func_map = {
             "pdf_word": pdf_to_word,
@@ -730,7 +811,11 @@ class ConvertPage(QWidget):
         if func is None:
             self._lbl_status.setText("错误：未找到转换函数")
             return
-
+    
+        # 多输出类型（生成多个文件，需要输出目录）
+        multi_output_types = {"pdf_img", "pdf_ppt", "batch"}
+        is_multi = self._selected_type in multi_output_types
+    
         self._busy = True
         self._ok = 0
         self._fail = 0
@@ -744,15 +829,50 @@ class ConvertPage(QWidget):
         self._idx = 0
         self._total = len(self._paths)
         self._func = func
-
+    
+        # ── 收集每个文件的输出路径 ──────────────────────────────
+        self._output_paths = []
+    
+        if is_multi:
+            # 多输出类型：需要输出目录
+            if not hasattr(self, "_output_dir") or not self._output_dir:
+                self._lbl_status.setText("请先选择输出目录")
+                self._busy = False
+                self._btn_start.setEnabled(True)
+                self._btn_select.setEnabled(True)
+                self._btn_clear.setEnabled(True)
+                return
+            self._output_paths = [None] * len(self._paths)
+        else:
+            # 单输出类型：为每个文件弹出保存对话框，支持自主命名
+            default_dir = getattr(self, "_output_dir", os.path.expanduser("~/Desktop"))
+            for i, fp in enumerate(self._paths):
+                base = os.path.splitext(os.path.basename(fp))[0]
+                default_name = self._get_default_output_name(base)
+    
+                save_path, _ = QFileDialog.getSaveFileName(
+                    self,
+                    f"保存转换结果 ({i + 1}/{len(self._paths)})",
+                    os.path.join(default_dir, default_name),
+                    self._get_save_filter(self._selected_type)
+                )
+                if not save_path:
+                    # 用户取消，中止整个操作
+                    self._busy = False
+                    self._btn_start.setEnabled(True)
+                    self._btn_select.setEnabled(True)
+                    self._btn_clear.setEnabled(True)
+                    return
+                self._output_paths.append(save_path)
+    
         # 更新列表状态
         for i in range(self._file_list.count()):
             it = self._file_list.item(i)
             it.setData(Qt.UserRole + 3, "waiting")
             p = it.data(Qt.UserRole + 1)
             s = self._format_size(it.data(Qt.UserRole + 2))
-            it.setText(f"⏳ {os.path.basename(p)}  |  {s}")
-
+            it.setText(f"\u23f3 {os.path.basename(p)}  |  {s}")
+    
         self._lbl_status.setText("准备开始...")
         self._next()
 
@@ -760,50 +880,57 @@ class ConvertPage(QWidget):
         if self._idx >= len(self._paths):
             self._done_all()
             return
-
+    
         fp = self._paths[self._idx]
         base = os.path.splitext(os.path.basename(fp))[0]
-
-        # 确定输出路径
-        out_ext = {
-            "pdf_word": ".docx", "pdf_excel": ".xlsx", "pdf_ppt": ".pptx",
-            "pdf_img": "", "img_pdf": ".pdf", "batch": "",
-        }.get(self._selected_type, "")
-
-        if self._selected_type == "pdf_img":
-            out_dir = os.path.join(self._output_dir, base + "_images")
-            os.makedirs(out_dir, exist_ok=True)
-            out = out_dir
-        elif self._selected_type == "pdf_ppt":
-            # pdf_to_ppt 期望 output_dir（目录），不是文件路径
-            os.makedirs(self._output_dir, exist_ok=True)
-            out = self._output_dir
-        elif self._selected_type == "batch":
-            out_dir = os.path.join(self._output_dir, "batch_output")
-            os.makedirs(out_dir, exist_ok=True)
-            out = out_dir
+    
+        # 确定输出路径（优先使用预收集的路径）
+        pre_collected = self._output_paths[self._idx] if hasattr(self, "_output_paths") else None
+        if pre_collected:
+            out = pre_collected
         else:
-            out = os.path.join(self._output_dir, base + out_ext)
-
+            # 多输出类型：自动生成（原有逻辑）
+            out_ext = {
+                "pdf_word": ".docx", "pdf_excel": ".xlsx", "pdf_ppt": ".pptx",
+                "pdf_img": "", "img_pdf": ".pdf", "batch": "",
+            }.get(self._selected_type, "")
+    
+            if self._selected_type == "pdf_img":
+                out_dir = os.path.join(self._output_dir, base + "_images")
+                os.makedirs(out_dir, exist_ok=True)
+                out = out_dir
+            elif self._selected_type == "pdf_ppt":
+                # pdf_to_ppt 期望 output_dir（目录），不是文件路径
+                os.makedirs(self._output_dir, exist_ok=True)
+                out = self._output_dir
+            elif self._selected_type == "batch":
+                out_dir = os.path.join(self._output_dir, "batch_output")
+                os.makedirs(out_dir, exist_ok=True)
+                out = out_dir
+            else:
+                out = os.path.join(self._output_dir, base + out_ext)
+    
         it = self._file_list.item(self._idx)
-        it.setText(f"⚙️ {os.path.basename(fp)}  |  转换中...")
+        it.setText(f"\u2699\ufe0f {os.path.basename(fp)}  |  转换中...")
         it.setData(Qt.UserRole + 3, "processing")
-
+    
         self._lbl_status.setText(f"正在转换 ({self._idx + 1}/{self._total})...")
-
+    
         # 准备额外参数
         extra = None
         if self._selected_type == "pdf_img":
             extra = {"fmt": self._params["fmt"], "dpi": self._params["dpi"]}
         elif self._selected_type == "img_pdf":
             extra = {"orientation": self._params["orientation"], "quality": self._params["quality"]}
+        elif self._selected_type == "pdf_excel":
+            extra = {"mode": self._params.get("excel_mode", "advanced")}
         elif self._selected_type == "batch":
             batch_fmt_map = {
-                "PDF（图片转PDF）": "pdf",
-                "Word（PDF转Word）": "word",
-                "Excel（PDF转Excel）": "excel",
-                "PPT（PDF转PPT）": "ppt",
-                "图片（PDF转图片）": "img"
+                "PDF\uff08\u56fe\u7247\u8f6cPDF\uff09": "pdf",
+                "Word\uff08PDF\u8f6cWord\uff09": "word",
+                "Excel\uff08PDF\u8f6cExcel\uff09": "excel",
+                "PPT\uff08PDF\u8f6cPPT\uff09": "ppt",
+                "\u56fe\u7247\uff08PDF\u8f6c\u56fe\u7247\uff09": "img"
             }
             batch_fmt = batch_fmt_map.get(self._combo_batch_fmt.currentText(), "pdf")
             extra = {"batch_fmt": batch_fmt}
@@ -934,6 +1061,14 @@ class ConvertPage(QWidget):
 
         self._lbl_batch_fmt.setText(_t(ctx, "输出格式：", None))
         self._lbl_hint_batch.setText(_t(ctx, "提示：批量转换将根据输入文件类型自动适配，图片→PDF 或 PDF→所选格式", None))
+
+        # PDF→Excel 参数面板
+        if hasattr(self, '_lbl_excel_mode'):
+            self._lbl_excel_mode.setText(_t(ctx, "转换模式：", None))
+            self._rb_standard.setText(_t(ctx, "标准模式", None))
+            self._rb_advanced.setText(_t(ctx, "高级模式（OCR）", None))
+            if hasattr(self, '_lbl_excel_hint'):
+                self._lbl_excel_hint.setText(_t(ctx, "标准模式：pdfplumber 提取 + 图片嵌入；高级模式：RapidOCR 识别 + 图片提取，消除乱码", None))
 
         # ComboBox 项目
         self._combo_fmt.blockSignals(True)
@@ -1212,6 +1347,13 @@ class ConvertPage(QWidget):
             lbl.setStyleSheet(text_sub_style)
 
         # Hint labels that may or may not exist as instance attributes
-        for attr_name in ('_lbl_hint_common', '_lbl_hint_batch'):
+        for attr_name in ('_lbl_hint_common', '_lbl_hint_batch',
+                          '_lbl_excel_mode', '_lbl_excel_hint',
+                          '_rb_standard', '_rb_advanced'):
             if hasattr(self, attr_name):
-                getattr(self, attr_name).setStyleSheet(text_sub_style)
+                widget = getattr(self, attr_name)
+                # Radio buttons need text_main_style
+                if attr_name.startswith('_rb_'):
+                    widget.setStyleSheet(f"color: {c['text_main']}; font-size: 13px; background: transparent; border: none;")
+                else:
+                    widget.setStyleSheet(text_sub_style)

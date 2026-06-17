@@ -618,7 +618,7 @@ class Ui_SettingsPage(object):
         self.lblSectionAbout.setText(QCoreApplication.translate("SettingsPage", u"\u5173\u4e8e", None))
         self.lblAboutIcon.setText("")
         self.lblAppName.setText(QCoreApplication.translate("SettingsPage", u"\u5370\u6d41PDflow", None))
-        self.lblAppVersion.setText(QCoreApplication.translate("SettingsPage", u"v1.1-beta \u00b7 2026.06.12", None))
+        self.lblAppVersion.setText(QCoreApplication.translate("SettingsPage", u"v1.2 \u00b7 2026.06.13", None))
         self.lblAppDesc.setText(QCoreApplication.translate("SettingsPage", u"\u8bbe\u8ba1\u5e08\u4e13\u7528\u7684\u8f7b\u91cf\u7ea7 PDF \u5de5\u5177\u7bb1", None))
         self.btnCheckUpdate.setText(QCoreApplication.translate("SettingsPage", u"\u68c0\u67e5\u66f4\u65b0", None))
         self.btnFeedback.setText(QCoreApplication.translate("SettingsPage", u"\u53cd\u9988", None))

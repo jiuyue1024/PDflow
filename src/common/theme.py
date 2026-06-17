@@ -4,6 +4,7 @@
 # V2.2: 新增 text_meta / border_hover / sidebar_text / sidebar_text_active 等 token，对齐 global.qss.template
 
 import os, json
+from src.common.paths import data_path
 
 # ===================================================================
 # DARK_COLORS — 深色模式（默认）
@@ -252,7 +253,7 @@ LIGHT_COLORS = {
 }
 
 
-CONFIG_FILE = os.path.join(os.path.dirname(__file__), "app_config.json")
+CONFIG_FILE = data_path("app_config.json")
 
 
 def _load_theme():

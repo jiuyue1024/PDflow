@@ -99,3 +99,17 @@ __pycache__/
 # v1.1-patch: PyInstaller spec 文件应入 git（打包配置代码）
 # 反向排除 *.spec 规则，覆盖 project_root/*.spec
 !*.spec
+
+# ── V1.2 新增排除 ──
+# 用户配置文件（运行时生成，不入 git）
+src/common/app_config.json
+
+# IDE/工具
+.arts/
+
+# 构建产物子目录
+build/PDflow_*/
+build/7z-extracted/
+
+# 测试输出
+tests/*.html

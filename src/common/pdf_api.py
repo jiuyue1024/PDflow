@@ -161,12 +161,13 @@ def merge_pdfs(output_path: str, *filepaths, progress_callback=None) -> dict:
 # 拆分 PDF
 # ============================================================
 def split_pdf(filepath: str, output_dir: str, mode: str = "page", range_str: str = None,
-              progress_callback=None) -> dict:
+              progress_callback=None, prefix: str = None) -> dict:
     """
     拆分PDF
     mode: "page" 每页单独保存 | "range" 按范围拆分
     range_str: "1-3,5-8" 格式的页码范围（mode=range 时使用）
     progress_callback: callable(current, total, filename) — 每拆分一个片段后触发
+    prefix: 输出文件名前缀，默认使用源文件名
     """
     errors = []
     output_files = []
@@ -174,7 +175,7 @@ def split_pdf(filepath: str, output_dir: str, mode: str = "page", range_str: str
     try:
         doc = fitz.open(filepath)
         total = len(doc)
-        basename = os.path.splitext(os.path.basename(filepath))[0]
+        basename = prefix if prefix else os.path.splitext(os.path.basename(filepath))[0]
 
         if mode == "page":
             # 每页一个文件
@@ -724,10 +725,587 @@ def _unify_docx_fonts(docx_path: str):
         pass
 
 # ============================================================
+# PDF→Excel 增强功能：OCR 兜底 + 图片提取（v1.2）
+# ============================================================
+
+# 模块级 OCR 引擎单例（延迟初始化，避免重复加载）
+_rapidocr_engine = None
+
+
+def _get_rapidocr():
+    """获取 RapidOCR 引擎实例（延迟初始化单例）"""
+    global _rapidocr_engine
+    if _rapidocr_engine is None:
+        try:
+            from rapidocr_onnxruntime import RapidOCR
+            _rapidocr_engine = RapidOCR()
+        except Exception:
+            pass
+    return _rapidocr_engine
+
+
+def _check_tesseract_available() -> bool:
+    """检测 OCR 引擎是否可用（优先 RapidOCR，回退 Tesseract）"""
+    if _get_rapidocr() is not None:
+        return True
+    try:
+        import pytesseract
+        pytesseract.get_tesseract_version()
+        return True
+    except Exception:
+        return False
+
+
+def _check_text_quality(ir_or_rows) -> dict:
+    """检测提取文本的质量，决定是否触发 OCR
+
+    检测指标：
+    1. 乱码率：不属于常见 Unicode 块的字符占比
+    2. 交织特征：相邻字符在不同 Unicode 块间频繁跳跃
+
+    返回: {"quality": "good"|"poor", "garble_ratio": float, "need_ocr": bool}
+    """
+    from src.common.pdf_table_ir import ir_to_rows
+
+    if ir_or_rows is None:
+        return {"quality": "poor", "garble_ratio": 1.0, "need_ocr": True}
+
+    if isinstance(ir_or_rows, dict):
+        try:
+            rows = ir_to_rows(ir_or_rows)
+        except Exception:
+            return {"quality": "poor", "garble_ratio": 1.0, "need_ocr": True}
+    else:
+        rows = ir_or_rows
+
+    if not rows:
+        return {"quality": "poor", "garble_ratio": 1.0, "need_ocr": True}
+
+    total_chars = 0
+    garbled_chars = 0
+    prev_block = None
+    prev_cp = None
+    block_jumps = 0
+    total_transitions = 0
+
+    for row in rows:
+        for cell in row:
+            text = str(cell) if cell else ""
+            for ch in text:
+                if ch.isspace():
+                    continue
+                total_chars += 1
+                cp = ord(ch)
+
+                # 判断字符所属 Unicode 块
+                if 0x0020 <= cp <= 0x007F:
+                    block = "ascii"
+                elif 0x00C0 <= cp <= 0x024F:
+                    block = "latin_ext"
+                elif 0x3000 <= cp <= 0x9FFF or 0x3400 <= cp <= 0x4DBF:
+                    block = "cjk"
+                elif 0xFF00 <= cp <= 0xFFEF:
+                    block = "fullwidth"
+                elif 0xAC00 <= cp <= 0xD7AF:
+                    block = "korean"
+                elif 0x2000 <= cp <= 0x206F:
+                    block = "punctuation"
+                else:
+                    block = "other"
+
+                if block == "other":
+                    garbled_chars += 1
+
+                if prev_block is not None and block != prev_block:
+                    total_transitions += 1
+                    # 只标记真正可疑的块跳跃：正常文本↔CJK/韩文切换不算乱码
+                    # 可疑跳跃：ASCII ↔ other / fullwidth ↔ other / cjk ↔ korean 等
+                    normal_pair = {
+                        frozenset({"ascii", "cjk"}),
+                        frozenset({"ascii", "fullwidth"}),
+                        frozenset({"ascii", "punctuation"}),
+                        frozenset({"cjk", "fullwidth"}),
+                        frozenset({"cjk", "punctuation"}),
+                        frozenset({"ascii", "latin_ext"}),
+                    }
+                    pair = frozenset({prev_block, block})
+                    if pair not in normal_pair and prev_cp is not None and abs(cp - prev_cp) > 0x1000:
+                        block_jumps += 1
+                prev_block = block
+                prev_cp = cp
+
+    if total_chars == 0:
+        return {"quality": "poor", "garble_ratio": 1.0, "need_ocr": True}
+
+    garble_ratio = garbled_chars / total_chars
+    interleave_ratio = block_jumps / max(total_transitions, 1)
+    need_ocr = garble_ratio > 0.20 or interleave_ratio > 0.50
+
+    return {
+        "quality": "poor" if need_ocr else "good",
+        "garble_ratio": round(garble_ratio, 3),
+        "interleave_ratio": round(interleave_ratio, 3),
+        "need_ocr": need_ocr,
+    }
+
+
+def _extract_text_layer_lines(fitz_page) -> list:
+    """提取 PDF 文本层的行信息（带 y 坐标）
+
+    返回: [{"y_top": float, "y_bottom": float, "text": str}, ...]
+    按 y_top 升序排列
+    """
+    lines_info = []
+    try:
+        blocks = fitz_page.get_text("dict")["blocks"]
+    except Exception:
+        return []
+
+    for block in blocks:
+        if block.get("type") != 0:
+            continue
+        for line in block.get("lines", []):
+            spans_text = []
+            y_top = float('inf')
+            y_bottom = 0
+            for span in line.get("spans", []):
+                t = span.get("text", "")
+                if t.strip():
+                    spans_text.append(t)
+                bbox = span.get("bbox", (0, 0, 0, 0))
+                y_top = min(y_top, bbox[1])
+                y_bottom = max(y_bottom, bbox[3])
+            text = "".join(spans_text).strip()
+            if text and y_top < float('inf'):
+                lines_info.append({
+                    "y_top": y_top,
+                    "y_bottom": y_bottom,
+                    "text": text,
+                })
+
+    lines_info.sort(key=lambda x: x["y_top"])
+    return lines_info
+
+
+def _ocr_extract_page(fitz_page, lang: str = "chi_sim+eng", dpi: int = 300) -> list:
+    """OCR 提取 + 文本层补充：确保不丢失任何内容
+
+    流程:
+    1. OCR 识别渲染图片中的文字
+    2. 提取 PDF 文本层行信息
+    3. 将文本层中 OCR 未覆盖的行补充到结果中（按 y 坐标插入）
+
+    参数:
+    - fitz_page: PyMuPDF 页面对象
+    - lang: 语言（保留接口）
+    - dpi: 渲染分辨率（默认 300）
+
+    返回: List[List[str]] — 行列表
+    """
+    from PIL import Image as PILImage
+    import numpy as np
+
+    # 渲染页面为图片
+    try:
+        zoom = dpi / 72.0
+        mat = fitz.Matrix(zoom, zoom)
+        pix = fitz_page.get_pixmap(matrix=mat)
+        img = PILImage.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        img_array = np.array(img)
+    except Exception as e:
+        import logging
+        logging.warning(f"OCR 渲染失败: {e}")
+        return []
+
+    # OCR 识别
+    ocr_rows = []
+    engine = _get_rapidocr()
+    if engine is not None:
+        ocr_rows = _ocr_with_rapidocr(engine, img_array)
+    else:
+        try:
+            import pytesseract
+            from pytesseract import Output
+            ocr_rows = _ocr_with_tesseract(pytesseract, Output, img)
+        except ImportError:
+            pass
+
+    # 文本层补充：将 OCR 未覆盖的文本层行插入结果
+    tl_lines = _extract_text_layer_lines(fitz_page)
+    if not tl_lines:
+        return ocr_rows
+
+    if not ocr_rows:
+        # OCR 完全失败，直接用文本层
+        return [[line["text"]] for line in tl_lines]
+
+    # 构建 OCR 全文（小写）用于去重匹配
+    ocr_all_text = " ".join(" ".join(r) for r in ocr_rows)
+    page_height = fitz_page.rect.height
+
+    # 检查文本层每行是否被 OCR 覆盖（模糊匹配：包含关系）
+    missing_before = []  # OCR 第一行之前的缺失行
+    missing_after = []   # OCR 最后一行之后的缺失行
+
+    # 对每行文本层内容检查是否被 OCR 覆盖（忽略大小写）
+    ocr_lower_all = ocr_all_text.lower()
+
+    for line_info in tl_lines:
+        tl_text = line_info["text"].strip()
+        if not tl_text:
+            continue
+
+        # 模糊匹配：忽略大小写，检查文本层内容是否在 OCR 结果中
+        tl_lower = tl_text.lower()
+        found = tl_lower in ocr_lower_all or any(
+            w.lower() in ocr_lower_all for w in tl_lower.split() if len(w) > 1
+        )
+
+        if not found:
+            # 根据 y 坐标决定插入位置
+            y_ratio = line_info["y_top"] / max(page_height, 1)
+            if y_ratio < 0.3:
+                # 顶部区域：插入到开头
+                missing_before.append([tl_text])
+            elif y_ratio > 0.7:
+                # 底部区域：插入到末尾
+                missing_after.append([tl_text])
+            # 中间区域：跳过（可能是 OCR 识别略有不同）
+
+    result = missing_before + ocr_rows + missing_after
+    return result
+
+
+def _ocr_with_rapidocr(engine, img_array) -> list:
+    """使用 RapidOCR 识别图片中的文字"""
+    try:
+        result, elapse = engine(img_array)
+        if not result:
+            return []
+
+        # RapidOCR 返回: [[[x1,y1],[x2,y2],[x3,y3],[x4,y4]], text, confidence]
+        items = []
+        for bbox, text, conf in result:
+            if not text or not text.strip() or conf < 0.3:
+                continue
+            # 计算 bbox 中心 y 和最小 x
+            ys = [p[1] for p in bbox]
+            xs = [p[0] for p in bbox]
+            items.append({
+                "top": min(ys),
+                "bottom": max(ys),
+                "left": min(xs),
+                "right": max(xs),
+                "y_center": sum(ys) / len(ys),
+                "text": text.strip(),
+            })
+
+        if not items:
+            return []
+
+        # 按 y_center 聚类为行（间距 < 10px 视为同一行）
+        items.sort(key=lambda x: x["y_center"])
+        rows_items = []
+        current_row = [items[0]]
+
+        for item in items[1:]:
+            if abs(item["y_center"] - current_row[-1]["y_center"]) < 10:
+                current_row.append(item)
+            else:
+                rows_items.append(current_row)
+                current_row = [item]
+        rows_items.append(current_row)
+
+        # 每行按 x 坐标排序，空格拼接，并应用后处理修正
+        rows = []
+        for row_items in rows_items:
+            row_items.sort(key=lambda x: x["left"])
+            text = " ".join(item["text"] for item in row_items)
+            text = _post_process_ocr_text(text)
+            rows.append([text])
+
+        # 列归一化
+        if rows:
+            max_cols = max(len(r) for r in rows)
+            for r in rows:
+                while len(r) < max_cols:
+                    r.append("")
+
+        return rows
+    except Exception as e:
+        import logging
+        logging.warning(f"RapidOCR 识别失败: {e}")
+        return []
+
+
+def _ocr_with_tesseract(pytesseract, Output, pil_img) -> list:
+    """使用 Tesseract 识别图片中的文字（回退方案）"""
+    try:
+        data = pytesseract.image_to_data(pil_img, lang="chi_sim+eng", output_type=Output.DICT)
+
+        words = []
+        for i in range(len(data["text"])):
+            text = data["text"][i].strip()
+            conf = int(data["conf"][i])
+            if not text or conf < 30:
+                continue
+            words.append({
+                "left": data["left"][i],
+                "top": data["top"][i],
+                "width": data["width"][i],
+                "height": data["height"][i],
+                "text": text,
+                "block_num": data["block_num"][i],
+                "line_num": data["line_num"][i],
+            })
+
+        if not words:
+            return []
+
+        line_groups = {}
+        for w in words:
+            key = (w["block_num"], w["line_num"])
+            if key not in line_groups:
+                line_groups[key] = []
+            line_groups[key].append(w)
+
+        sorted_keys = sorted(line_groups.keys(),
+                             key=lambda k: min(w["top"] for w in line_groups[k]))
+
+        rows = []
+        for key in sorted_keys:
+            line_words = sorted(line_groups[key], key=lambda w: w["left"])
+            text = " ".join(w["text"] for w in line_words)
+            rows.append([text])
+
+        if rows:
+            max_cols = max(len(r) for r in rows)
+            for r in rows:
+                while len(r) < max_cols:
+                    r.append("")
+
+        return rows
+    except Exception as e:
+        import logging
+        logging.warning(f"Tesseract OCR 失败: {e}")
+        return []
+
+
+def _post_process_ocr_text(text: str) -> str:
+    """OCR 文本后处理：修正常见识别误差
+
+    修正规则：
+    1. 邮箱格式：去除 @ 后的多余空格（@ info@mail.com → @info@mail.com）
+    2. URL 格式：修复多余 w（wwww.web.com → www.web.com）
+    3. 电话格式：去除 T/+ 后的零散空格（T +00 → T+00）
+    4. 地址前缀：A. 后多余空格
+    """
+    import re
+    if not text:
+        return text
+
+    # 规则 1: 邮箱 @ 后多余空格
+    text = re.sub(r'@\s+([a-zA-Z0-9])', r'@\1', text)
+
+    # 规则 2: URL 中多余的 w（w{4,} → www）
+    text = re.sub(r'\bw{4,}\.', 'www.', text)
+
+    # 规则 3: 电话前缀 T 后的空格
+    text = re.sub(r'\bT\s*\+\s*', 'T+', text)
+    text = re.sub(r'\bW\s*w{2,}\.', 'www.', text, flags=re.IGNORECASE)
+
+    # 规则 4: 地址前缀 A. 后多余空格
+    text = re.sub(r'\bA\.\s+', 'A.', text)
+
+    # 规则 5: URL 中数字和字母之间的 OCR 噪声（w 2m3 eab → wm3eab 等）
+    # 仅对明确是 URL 的文本应用（含 .com/.cn/.org 等）
+    if re.search(r'\.(com|cn|org|net|edu)\b', text):
+        # 去除域名中数字和字母之间的单个空格
+        text = re.sub(r'(\w)\s(\w)', r'\1\2', text)
+
+    return text.strip()
+
+
+def _extract_page_images(fitz_doc, page_num: int) -> list:
+    """提取页面中的嵌入图片（v1.2-patch: 兼容 xref=None 场景）
+
+    流程:
+    1. page.get_image_info() 获取 bbox 信息（兼容 xref=None）
+    2. page.get_images() 获取 xref 列表
+    3. fitz.Pixmap(doc, xref) 提取图片数据（兼容 bad image name）
+    4. 过滤: 宽<30px 或 高<30px 跳过; 面积>80%页面跳过
+
+    返回: [{"bbox": (x0, y0, x1, y1), "data": bytes, "ext": str, "width": int, "height": int}, ...]
+    """
+    images = []
+    page = fitz_doc[page_num]
+    page_rect = page.rect
+    page_area = page_rect.width * page_rect.height
+
+    # 获取 bbox 信息（含 xref=None 的情况）
+    try:
+        img_info_list = page.get_image_info()
+    except Exception:
+        img_info_list = []
+
+    # 获取 xref 列表
+    try:
+        img_xref_list = page.get_images(full=True)
+    except Exception:
+        return []
+
+    # 配对 bbox 和 xref
+    for i, img_entry in enumerate(img_xref_list):
+        xref = img_entry[0]
+        try:
+            # 从 img_info_list 获取 bbox
+            bbox = None
+            if i < len(img_info_list):
+                info = img_info_list[i]
+                b = info.get('bbox')
+                if b:
+                    bbox = fitz.Rect(b[0], b[1], b[2], b[3])
+
+            # 回退: 尝试 get_image_bbox
+            if bbox is None:
+                bboxes = page.get_image_bbox(xref)
+                if bboxes:
+                    bbox = bboxes[0]
+
+            if bbox is None:
+                continue
+
+            # 使用 Pixmap 提取图片（兼容 bad image name 场景）
+            try:
+                pix = fitz.Pixmap(fitz_doc, xref)
+            except Exception:
+                continue
+
+            w, h = pix.width, pix.height
+
+            # 过滤小图（装饰性图标）—— 阈值降至 30px
+            if w < 30 or h < 30:
+                continue
+
+            # 过滤背景图（面积 > 80% 页面）
+            bbox_area = abs(bbox.x1 - bbox.x0) * abs(bbox.y1 - bbox.y0)
+            if page_area > 0 and bbox_area / page_area > 0.8:
+                continue
+
+            # 转为 PNG 格式字节
+            png_data = pix.tobytes("png")
+
+            images.append({
+                "bbox": (bbox.x0, bbox.y0, bbox.x1, bbox.y1),
+                "data": png_data,
+                "ext": "png",
+                "width": w,
+                "height": h,
+            })
+        except Exception:
+            continue
+
+    return images
+
+
+def _embed_images_in_sheet(ws, images, page_height, page_width=0, start_row=1):
+    """将图片嵌入到 Excel sheet，按 PDF 原始比例和位置显示
+
+    缩放策略：
+    - 图片在 Excel 中的大小 = PDF 中的 bbox 尺寸 × DPI 系数（96/72 ≈ 1.33）
+    - 图片位置 = 按 bbox y 坐标映射到 Excel 行号
+    - 最大宽度限制 300px，最小 30px
+
+    参数:
+    - ws: openpyxl Worksheet
+    - images: _extract_page_images 返回的图片列表
+    - page_height: PDF 页面高度（pt）
+    - page_width: PDF 页面宽度（pt）
+    - start_row: 文字内容起始行号
+    """
+    from openpyxl.drawing.image import Image as XlImage
+    from openpyxl.utils import get_column_letter
+
+    if not images:
+        return
+
+    # PDF pt → Excel pixel 缩放因子
+    PT_TO_PX = 96.0 / 72.0  # ≈ 1.33
+    MAX_W = 300  # 最大宽度限制
+    MIN_SIZE = 30  # 最小尺寸
+
+    # 找到文字内容的最大列数
+    max_text_col = 1
+    for row in ws.iter_rows():
+        for cell in row:
+            if cell.value is not None:
+                max_text_col = max(max_text_col, cell.column)
+
+    img_col_start = max_text_col + 2  # 图片放在文字右侧，留 1 列间距
+
+    # 计算行高总和用于 y 坐标映射
+    total_row_height = 0
+    for row_idx in range(1, ws.max_row + 1):
+        rh = ws.row_dimensions[row_idx].height
+        total_row_height += (rh if rh else 15)  # 默认行高 15px
+
+    for idx, img_info in enumerate(images):
+        try:
+            img_bytes = io.BytesIO(img_info["data"])
+            ext = img_info.get("ext", "png")
+            pil_img = Image.open(img_bytes)
+
+            # 计算 PDF 中的显示尺寸（pt → px）
+            bbox = img_info["bbox"]  # (x0, y0, x1, y1)
+            pdf_w_pt = abs(bbox[2] - bbox[0])
+            pdf_h_pt = abs(bbox[3] - bbox[1])
+
+            # 目标尺寸：PDF bbox 尺寸 × DPI 系数
+            target_w = max(int(pdf_w_pt * PT_TO_PX), MIN_SIZE)
+            target_h = max(int(pdf_h_pt * PT_TO_PX), MIN_SIZE)
+
+            # 限制最大宽度，等比缩放
+            if target_w > MAX_W:
+                scale = MAX_W / target_w
+                target_w = MAX_W
+                target_h = max(int(target_h * scale), MIN_SIZE)
+
+            # 用 PIL 缩放到目标尺寸（高质量重采样）
+            pil_img = pil_img.resize((target_w, target_h), Image.LANCZOS)
+
+            # 保存到临时 buffer
+            buf = io.BytesIO()
+            save_fmt = "PNG" if ext.lower() in ("png", "gif", "bmp") else "JPEG"
+            pil_img.save(buf, format=save_fmt)
+            buf.seek(0)
+
+            xl_img = XlImage(buf)
+
+            # 根据 bbox y 坐标计算对应 Excel 行号
+            y_ratio = bbox[1] / max(page_height, 1)
+            target_row = max(1, int(y_ratio * ws.max_row) + 1)
+
+            # 图片列：从 img_col_start 开始，按 bbox x 坐标偏移
+            if page_width > 0:
+                x_ratio = bbox[0] / page_width
+                col_offset = max(0, int(x_ratio * 5))  # 映射到 0-4 列偏移
+            else:
+                col_offset = idx % 3
+
+            col_num = img_col_start + col_offset
+            col_letter = get_column_letter(col_num)
+            cell_ref = f"{col_letter}{target_row}"
+
+            ws.add_image(xl_img, cell_ref)
+        except Exception:
+            continue
+
+
+# ============================================================
 # PDF 转 Excel（纯 pdfplumber 多参数优化提取）
 # ============================================================
-def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
-    """PDF转Excel（v1.1-patch：IR 中间结构 + wrap_text 统一写入）
+def pdf_to_excel(input_path: str, output_path: str = None, mode: str = "advanced") -> dict:
+    """PDF转Excel（v1.2：OCR 兜底 + 图片提取 + IR 中间结构）
 
     策略：
     1. 对每一页，尝试多种 table_settings 参数组合（v1 保留）
@@ -735,12 +1313,14 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
     3. 每页独立处理，页码绝不混乱
     4. 表格提取失败时，使用 word-level 文字回退（v1.1-patch 返回 IR）
     5. 统一通过 IR 中间结构 + write_cell 写入 Excel（v1.1-patch 新增）
+    6. v1.2 Advanced 模式：自动检测文本质量，乱码时触发 OCR + 图片提取
 
     参数：
     - input_path: 输入 PDF 路径
-    - output_path: 输出 xlsx 路径，支持两种形式：
-        * 完整文件路径（推荐）：如 D:/out/foo.xlsx
-        * 输出目录：如是已存在目录，会在目录下生成 <input_basename>.xlsx
+    - output_path: 输出 xlsx 路径
+    - mode: 转换模式
+        * "standard": pdfplumber + 图片提取（无 OCR）
+        * "advanced": 自动检测文本质量，乱码时触发 OCR + 图片提取（默认）
     """
     try:
         import pdfplumber
@@ -759,29 +1339,127 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
         # - 禁止 per-table 拆 sheet，禁止重复 sheet
         page_irs = []  # [(page_num, ir)]
         has_structured = False
+        page_images_map = {}  # page_num -> [image_info]
+
+        # v1.2: 打开 fitz 文档用于图片提取和 OCR
+        fitz_doc = fitz.open(input_path)
 
         with pdfplumber.open(input_path) as pdf:
             for page_num, page in enumerate(pdf.pages, 1):
                 ir = _extract_page_best(page, page_num)
                 if ir is not None:
+                    # v1.2 Advanced 模式：始终使用 OCR（消除所有乱码问题）
+                    if mode == "advanced" and _check_tesseract_available():
+                        fitz_page = fitz_doc[page_num - 1]
+                        ocr_rows = _ocr_extract_page(fitz_page)
+                        if ocr_rows:
+                            from src.common.pdf_table_ir import fallback_block
+                            ir = fallback_block(rows=ocr_rows, page=page_num,
+                                                table_id=1, confidence=0.6)
                     page_irs.append((page_num, ir))
                     if ir.get("meta", {}).get("mode") == "structured":
                         has_structured = True
+
+                # v1.2: 提取每页图片
+                page_images = _extract_page_images(fitz_doc, page_num - 1)
+                if page_images:
+                    page_images_map[page_num] = page_images
 
         # 如果没有结构化表格，尝试全局 fallback
         fallback_ir = None
         if not has_structured:
             fallback_ir = _extract_text_fallback(input_path)
+            # v1.2 Advanced 模式：对 fallback 始终使用 OCR（RapidOCR 足够快）
+            if mode == "advanced" and _check_tesseract_available():
+                all_ocr_rows = []
+                for pn in range(len(fitz_doc)):
+                    ocr_rows = _ocr_extract_page(fitz_doc[pn])
+                    if ocr_rows:
+                        if all_ocr_rows:
+                            all_ocr_rows.append([])  # 页间空行
+                        all_ocr_rows.extend(ocr_rows)
+                if all_ocr_rows:
+                    from src.common.pdf_table_ir import fallback_block
+                    fallback_ir = fallback_block(rows=all_ocr_rows, page=0,
+                                                 table_id=0, confidence=0.6)
+                # 提取所有页面图片（fallback 路径之前可能未提取）
+                for pn in range(len(fitz_doc)):
+                    if (pn + 1) not in page_images_map:
+                        imgs = _extract_page_images(fitz_doc, pn)
+                        if imgs:
+                            page_images_map[pn + 1] = imgs
 
         if not page_irs and fallback_ir is None:
             raise Exception("PDF 未检测到可提取的表格或文字内容（v1.1-patch: 可能是扫描件或图片型 PDF）")
 
-        # v1.1-patch 统一 IR 输出链路：
+        # v1.1-patch2 统一 IR 输出链路：
         # Excel writer 只吃 IR rows，禁止 DataFrame 中间层
+        # row-lock：每行 IR row 原样写入，禁止拆分/重组/降列
         def write_cell(ws, r, c, value):
+            """写入单元格：wrap_text 仅当 cell 含 \n 时启用（仅渲染不参与布局）"""
             cell = ws.cell(row=r, column=c, value=value)
-            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            has_newline = isinstance(value, str) and "\n" in value
+            cell.alignment = Alignment(wrap_text=has_newline, vertical="top")
             return cell
+
+        def _cell_display_width(val: str) -> int:
+            """计算单元格显示宽度（v1.1-patch3: 增强 CJK 宽度估算）
+
+            - \n 不参与宽度计算（按行拆行取最长行）
+            - CJK 统一汉字/标点/全角 = 2.0 宽度
+            - 其他字符 = 1.0 宽度
+            """
+            if not val:
+                return 0
+            lines = val.split("\n") if "\n" in val else [val]
+            max_w = 0
+            for line in lines:
+                w = 0.0
+                for c in line:
+                    cp = ord(c)
+                    if (0x4E00 <= cp <= 0x9FFF     # CJK 统一汉字
+                            or 0x3000 <= cp <= 0x303F  # CJK 标点
+                            or 0xFF00 <= cp <= 0xFFEF  # 全角 ASCII
+                            or 0x3400 <= cp <= 0x4DBF  # CJK 扩展 A
+                            or 0xAC00 <= cp <= 0xD7AF):  # 韩文
+                        w += 2.0
+                    else:
+                        w += 1.0
+                max_w = max(max_w, w)
+            return int(max_w)
+
+        def _write_ir_to_sheet(wb, sheet_name, rows, images=None, page_height=0, page_width=0):
+            """row-lock: IR rows 原样写入 sheet，禁止行内拆分或列重组
+            
+            v1.2: 新增 images 参数，将提取的图片嵌入到 sheet 中
+            """
+            ws = wb.create_sheet(sheet_name[:31])
+            for i, row in enumerate(rows, 1):
+                # row-lock: 每行 cell 数 = IR 原始列数，禁止增删
+                for j, val in enumerate(row, 1):
+                    write_cell(ws, i, j, val)
+
+            # 列宽估算：基于显示宽度（\n 不参与布局）
+            if rows:
+                max_cols = max((len(r) for r in rows), default=0)
+                for col_idx in range(1, max_cols + 1):
+                    col_letter = ws.cell(row=1, column=col_idx).column_letter
+                    max_len = 0
+                    for r_idx in range(1, len(rows) + 1):
+                        try:
+                            v = ws.cell(row=r_idx, column=col_idx).value
+                            val = str(v) if v else ""
+                            cell_len = _cell_display_width(val)
+                            max_len = max(max_len, cell_len)
+                        except Exception:
+                            pass
+                    ws.column_dimensions[col_letter].width = min(max(max_len + 4, 8), 60)
+
+            # v1.2: 嵌入图片（按 PDF 原始比例）
+            if images:
+                _embed_images_in_sheet(ws, images, page_height, page_width)
+
+            return ws
 
         wb = Workbook()
         wb.remove(wb.active)  # 移除默认 sheet
@@ -790,55 +1468,27 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
         for page_num, ir in page_irs:
             sheet_name = f"第{page_num}页"
             rows = ir_to_rows(ir)
-
-            ws = wb.create_sheet(sheet_name[:31])
-            for i, row in enumerate(rows, 1):
-                for j, val in enumerate(row, 1):
-                    write_cell(ws, i, j, val)
-
-            # 列宽估算
-            if rows:
-                max_cols = max((len(r) for r in rows), default=0)
-                for col_idx in range(1, max_cols + 1):
-                    col_letter = ws.cell(row=1, column=col_idx).column_letter
-                    max_len = 0
-                    for r_idx in range(1, len(rows) + 1):
-                        try:
-                            v = ws.cell(row=r_idx, column=col_idx).value
-                            val = str(v) if v else ""
-                            cjk = sum(1 for c in val if '\u4e00' <= c <= '\u9fff')
-                            cell_len = len(val) + cjk
-                            max_len = max(max_len, cell_len)
-                        except Exception:
-                            pass
-                    ws.column_dimensions[col_letter].width = min(max(max_len + 4, 8), 50)
+            images = page_images_map.get(page_num, [])
+            page_height = fitz_doc[page_num - 1].rect.height if page_num <= len(fitz_doc) else 0
+            page_width = fitz_doc[page_num - 1].rect.width if page_num <= len(fitz_doc) else 0
+            _write_ir_to_sheet(wb, sheet_name, rows, images, page_height, page_width)
 
         # 写入全局唯一 fallback sheet
         if fallback_ir is not None:
             rows = ir_to_rows(fallback_ir)
-            ws = wb.create_sheet("文字内容")
-            for i, row in enumerate(rows, 1):
-                for j, val in enumerate(row, 1):
-                    write_cell(ws, i, j, val)
-
-            if rows:
-                max_cols = max((len(r) for r in rows), default=0)
-                for col_idx in range(1, max_cols + 1):
-                    col_letter = ws.cell(row=1, column=col_idx).column_letter
-                    max_len = 0
-                    for r_idx in range(1, len(rows) + 1):
-                        try:
-                            v = ws.cell(row=r_idx, column=col_idx).value
-                            val = str(v) if v else ""
-                            cjk = sum(1 for c in val if '\u4e00' <= c <= '\u9fff')
-                            cell_len = len(val) + cjk
-                            max_len = max(max_len, cell_len)
-                        except Exception:
-                            pass
-                    ws.column_dimensions[col_letter].width = min(max(max_len + 4, 8), 50)
+            # 汇总所有页面图片
+            all_fb_images = []
+            for pn in sorted(page_images_map.keys()):
+                all_fb_images.extend(page_images_map[pn])
+            page_height = fitz_doc[0].rect.height if len(fitz_doc) > 0 else 0
+            page_width = fitz_doc[0].rect.width if len(fitz_doc) > 0 else 0
+            _write_ir_to_sheet(wb, "文字内容", rows, all_fb_images, page_height, page_width)
 
         total_sheets = len(wb.sheetnames)
         wb.save(output_path)
+
+        # v1.2: 关闭 fitz 文档
+        fitz_doc.close()
 
         return {
             "status": "ok",
@@ -846,6 +1496,12 @@ def pdf_to_excel(input_path: str, output_path: str = None) -> dict:
             "tables": total_sheets,
         }
     except Exception as e:
+        # 确保 fitz_doc 关闭
+        if 'fitz_doc' in locals():
+            try:
+                fitz_doc.close()
+            except Exception:
+                pass
         raise Exception(f"PDF转Excel失败: {str(e)}")
 
 
@@ -966,10 +1622,17 @@ def _extract_page_best(page, page_num: int) -> list:
         from src.common.pdf_layout_parser import parse_layout_blocks
         page_rows = parse_layout_blocks(page)
         if page_rows:
+            # v1.1-patch3: 根据列对齐质量计算 confidence
+            col_counts = [len(r) for r in page_rows]
+            max_cols = max(col_counts) if col_counts else 1
+            alignment_quality = sum(1 for c in col_counts if c == max_cols) / max(len(col_counts), 1)
+            confidence = round(0.4 + alignment_quality * 0.2, 2)
+
             ir = fallback_block(
                 rows=page_rows,
                 page=page_num,
                 table_id=1,
+                confidence=confidence,
             )
             return ir
         return None
@@ -993,9 +1656,11 @@ def _extract_page_best(page, page_num: int) -> list:
     all_rows = []
     for idx, item in enumerate(selected, 1):
         df = item["df"]
-        # DataFrame → list of list：用 values.tolist() 避免 to_dict("records")
-        # 的 "columns are not unique" UserWarning
-        rows = df.fillna("").astype(str).values.tolist()
+        # DataFrame → list of list：必须包含列名行（即原始第一行数据）
+        # df.values.tolist() 只返回数据行，丢失了作为 columns 的首行
+        header_row = [str(c) if c is not None else "" for c in df.columns]
+        data_rows = df.fillna("").astype(str).values.tolist()
+        rows = [header_row] + data_rows
         if all_rows:
             all_rows.append([])  # 表间空行分隔
         all_rows.extend(rows)
@@ -1015,7 +1680,7 @@ def _column_stability_score(cols) -> float:
 
     用途：减弱"参数组合扫描中偶然生成均齐假表"对评分的干扰
 
-    返回 0.0 ~ 0.1（最大贡献 0.1）
+    返回 0.0 ~ 0.02（最大贡献 0.02，v1.1-patch2 降权：防止列偶齐导致假表高分）
     """
     try:
         import statistics
@@ -1033,7 +1698,7 @@ def _column_stability_score(cols) -> float:
     pstdev = statistics.pstdev(lengths)
     # 1 - (标准差 / (max+1))：max+1 防 0 除；值越大表示列越稳定
     stability = 1.0 - (pstdev / (max_len + 1))
-    return max(0.0, min(stability, 1.0)) * 0.1
+    return max(0.0, min(stability, 1.0)) * 0.02
 
 
 def _score_table(df) -> float:
@@ -1062,7 +1727,7 @@ def _score_table(df) -> float:
     avg_chars = total_chars / max(non_empty, 1)
     content_score = min(avg_chars / 5.0, 1.0) * 0.2
 
-    # v1.1-patch：列稳定性评分（每列累加，最多贡献 0.1 * 5 = 0.5）
+    # v1.1-patch2：列稳定性评分（降权封顶，防止偶发均齐假表高分）
     # 统一用 safe_list 替代 .tolist()，禁止 DataFrame/Series 直接 .tolist()
     from src.common.pdf_table_ir import safe_list
     col_stability_total = 0.0
@@ -1074,8 +1739,11 @@ def _score_table(df) -> float:
             col_series = col_series.squeeze()
         col_stability_total += _column_stability_score(safe_list(col_series))
         col_count += 1
-    # 归一化：按列数取平均，单表最大贡献 0.1
-    col_stability_score = (col_stability_total / col_count) if col_count > 0 else 0.0
+    # v1.1-patch2：归一化后封顶 0.05，禁止列数膨胀稳定性权重
+    col_stability_score = min(
+        (col_stability_total / col_count) if col_count > 0 else 0.0,
+        0.05
+    )
 
     score = fill_rate * 0.4 + col_score + row_score + content_score + col_stability_score
 

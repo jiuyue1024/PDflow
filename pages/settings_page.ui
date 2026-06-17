@@ -939,7 +939,7 @@ QLineEdit:focus {
             <item>
              <widget class="QLabel" name="lblAppVersion">
               <property name="text">
-               <string>v1.1-beta · 2026.06.12</string>
+               <string>v1.2 · 2026.06.13</string>
               </property>
               <property name="styleSheet">
                <string notr="true">color: #848E9C; font-size: 12px; background: transparent; border: none; padding: 0;</string>

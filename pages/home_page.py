@@ -713,7 +713,7 @@ class Ui_HomePage(object):
             "font-weight: 800; "
         )
         title_row.addWidget(self.title_label)
-        self.badge = Badge("V1.1-beta")
+        self.badge = Badge("V1.2")
         title_row.addWidget(self.badge)
         title_row.addStretch()
         self.hero_layout.addLayout(title_row)

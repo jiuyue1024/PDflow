@@ -1,8 +1,8 @@
 ;!@Install@!UTF-8!
-Title="印流PDflow V1.1-RC2"
-BeginPrompt="是否安装 印流PDflow V1.1-RC2？"
+Title="印流PDflow V1.2"
+BeginPrompt="是否安装 印流PDflow V1.2？"
 ExtractPathText="安装目录"
 ExtractTitle="正在解压..."
 GUIFlags="64"
-RunProgram="PDflow_V1.1-RC2/PDflow_V1.1-RC2.exe"
+RunProgram="PDflow_V1.2/PDflow_V1.2.exe"
 ;!@InstallEnd@!

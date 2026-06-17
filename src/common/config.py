@@ -1,7 +1,8 @@
 # common/config.py — 应用配置持久化模块
 import os, json
+from src.common.paths import data_path
 
-CONFIG_FILE = os.path.join(os.path.dirname(__file__), "app_config.json")
+CONFIG_FILE = data_path("app_config.json")
 
 DEFAULT_CONFIG = {
     "theme": "dark",   # "dark" | "light"

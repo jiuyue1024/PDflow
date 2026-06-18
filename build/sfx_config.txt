@@ -2,7 +2,9 @@
 Title="印流PDflow V1.2"
 BeginPrompt="是否安装 印流PDflow V1.2？"
 ExtractPathText="安装目录"
-ExtractTitle="正在解压..."
+ExtractTitle="正在安装..."
 GUIFlags="64"
-RunProgram="PDflow_V1.2/PDflow_V1.2.exe"
+InstallPath="%ProgramFiles%\\印流PDflow"
+Shortcuts="D\nPDflow_V1.2.exe\n印流PDflow"
+RunProgram="%%T\\PDflow_V1.2.exe"
 ;!@InstallEnd@!

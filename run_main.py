@@ -18,11 +18,60 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QSizePolicy, QG
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QColor, QPen, QPainter
 
-from src.common.paths import resource_path, data_path
+from src.common.paths import resource_path, data_path, get_app_root
 from src.common.theme_manager import ThemeManager
 from src.common.theme import DARK_COLORS, LIGHT_COLORS, get_current_theme
 
 QSS_PATH = resource_path("pages", "global.qss")
+
+
+def _ensure_desktop_shortcut():
+    """首次运行时自动在桌面创建'印流PDflow'快捷方式（仅打包版生效）"""
+    if not getattr(sys, 'frozen', False):
+        return
+
+    try:
+        desktop = os.path.join(os.environ.get('USERPROFILE', ''), 'Desktop')
+        if not os.path.isdir(desktop):
+            return
+
+        shortcut_path = os.path.join(desktop, '印流PDflow.lnk')
+        if os.path.exists(shortcut_path):
+            return
+
+        exe_path = sys.executable
+        work_dir = os.path.dirname(exe_path)
+        ico_path = os.path.join(work_dir, '_internal', 'assets', 'pdflow-logo.ico')
+
+        vbs = (
+            'Set s = CreateObject("WScript.Shell").CreateShortcut("{lnk}")\n'
+            's.TargetPath = "{exe}"\n'
+            's.WorkingDirectory = "{wd}"\n'
+            's.IconLocation = "{ico}"\n'
+            's.Description = "印流PDflow - 设计师专用PDF版式设计工具"\n'
+            's.Save\n'
+        ).format(
+            lnk=shortcut_path.replace('\\', '\\\\'),
+            exe=exe_path.replace('\\', '\\\\'),
+            wd=work_dir.replace('\\', '\\\\'),
+            ico=ico_path.replace('\\', '\\\\'),
+        )
+
+        import tempfile
+        import subprocess
+        vbs_file = os.path.join(tempfile.gettempdir(), '_pdflow_shortcut.vbs')
+        with open(vbs_file, 'w', encoding='utf-8') as f:
+            f.write(vbs)
+        subprocess.run(
+            ['cscript', '//nologo', vbs_file],
+            capture_output=True, timeout=10, creationflags=0x08000000
+        )
+        try:
+            os.remove(vbs_file)
+        except OSError:
+            pass
+    except Exception:
+        pass  # 快捷方式创建失败不影响应用启动
 
 # 动态导入生成的 UI 类
 from main_window import Ui_MainWindow
@@ -1147,6 +1196,9 @@ def _apply_main_window_theme(ui, colors, title_bar=None, central=None, title_btn
 
 
 def main():
+    # 首次启动自动创建桌面快捷方式
+    _ensure_desktop_shortcut()
+
     # 创建 i18n 管理器
     i18n = TranslationManager()
 

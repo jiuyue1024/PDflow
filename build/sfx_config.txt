@@ -5,6 +5,5 @@ ExtractPathText="安装目录"
 ExtractTitle="正在安装..."
 GUIFlags="64"
 InstallPath="%ProgramFiles%\\印流PDflow"
-Shortcuts="D\nPDflow_V1.2.exe\n印流PDflow"
 RunProgram="%%T\\PDflow_V1.2.exe"
 ;!@InstallEnd@!

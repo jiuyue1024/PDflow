@@ -1,0 +1,93 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        // Kept for legacy references, prefer CSS variables in components
+        primary: {
+          50: '#EFF6FF',
+          100: '#DBEAFE',
+          200: '#C7D2FE',
+          300: '#A5B4FC',
+          400: '#818CF8',
+          500: '#4F8CFF',
+          600: '#4338CA',
+          700: '#3730A3',
+          800: '#312E81',
+          900: '#1E1B4B',
+        },
+        surface: {
+          50: '#FFFFFF',
+          100: '#F9FAFB',
+          200: '#F3F4F6',
+          300: '#E5E7EB',
+          400: '#D1D5DB',
+          500: '#9CA3AF',
+          600: '#6B7280',
+          700: '#4B5563',
+          800: '#374151',
+          900: '#1F2937',
+        },
+        // Theme-aware sidebar tokens (mapped to CSS variables)
+        sidebar: {
+          bg: 'var(--bg-sidebar)',
+          border: 'var(--border)',
+          text: 'var(--sidebar-text)',
+          'text-secondary': 'var(--sidebar-text-secondary)',
+          'hover-bg': 'var(--sidebar-hover)',
+          'active-bg': 'var(--sidebar-active-bg)',
+          'active-text': 'var(--sidebar-active-text)',
+        },
+        // Theme-aware semantic tokens
+        theme: {
+          bg: 'var(--bg-app)',
+          card: 'var(--bg-card)',
+          'card-hover': 'var(--bg-card-hover)',
+          input: 'var(--bg-input)',
+          border: 'var(--border)',
+          'border-strong': 'var(--border-strong)',
+          'border-active': 'var(--border-active)',
+          'primary': 'var(--primary)',
+          'primary-hover': 'var(--primary-hover)',
+          'primary-subtle': 'var(--primary-subtle)',
+          'primary-text': 'var(--primary-text)',
+          'text-primary': 'var(--text-primary)',
+          'text-secondary': 'var(--text-secondary)',
+          'text-muted': 'var(--text-muted)',
+          'text-on-primary': 'var(--text-on-primary)',
+          success: 'var(--success)',
+          'success-bg': 'var(--success-bg)',
+          warning: 'var(--warning)',
+          'warning-bg': 'var(--warning-bg)',
+          error: 'var(--error)',
+          'error-bg': 'var(--error-bg)',
+          'sidebar-text': 'var(--sidebar-text)',
+          'sidebar-section': 'var(--sidebar-section-title)',
+          'stepper-inactive': 'var(--stepper-inactive-bg)',
+          'stepper-line': 'var(--stepper-line)',
+          'shadow-card': 'var(--shadow-card)',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
+      borderRadius: {
+        'xl': '12px',
+        'lg': '10px',
+        'md': '8px',
+      },
+      boxShadow: {
+        'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        'md': '0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+        'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05)',
+        'card': 'var(--shadow-card)',
+        'card-hover': 'var(--shadow-card-hover)',
+      },
+    },
+  },
+  plugins: [],
+}

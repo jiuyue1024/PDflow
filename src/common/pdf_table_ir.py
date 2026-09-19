@@ -28,6 +28,8 @@ class TableMeta:
     table_id: int = 0            # 当前页内的表格序号（1-based）
     confidence: float = 1.0      # 提取置信度（0-1，未来 v1.2 OCR 用）
     mode: str = "structured"     # structured / text_fallback / ocr_fallback
+    # Optional provenance sidecar.  Existing callers may continue to omit it.
+    provenance: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -39,7 +41,7 @@ class TableBlock:
 
     def to_dict(self) -> Dict:
         """序列化为 dict（便于跨模块传递）"""
-        return {
+        result = {
             "rows": self.rows,
             "spans": self.spans,
             "meta": {
@@ -49,6 +51,9 @@ class TableBlock:
                 "mode": self.meta.mode,
             } if self.meta else None,
         }
+        if self.meta and self.meta.provenance is not None:
+            result["meta"]["provenance"] = self.meta.provenance
+        return result
 
 
 # ============================================================
@@ -85,6 +90,7 @@ def to_table_block(
     table_id: int = 0,
     confidence: float = 1.0,
     mode: str = "structured",
+    provenance: Optional[Dict[str, Any]] = None,
 ) -> Dict:
     """构造一个 TableBlock 并以 dict 形式返回（IR 主流形式）
 
@@ -100,6 +106,7 @@ def to_table_block(
             table_id=table_id,
             confidence=confidence,
             mode=mode,
+            provenance=provenance,
         ),
     ).to_dict()
 
@@ -126,6 +133,7 @@ def ir_meta(ir: Union[Dict, TableBlock]) -> Optional[TableMeta]:
         table_id=meta_dict.get("table_id", 0),
         confidence=meta_dict.get("confidence", 1.0),
         mode=meta_dict.get("mode", "structured"),
+        provenance=meta_dict.get("provenance"),
     )
 
 

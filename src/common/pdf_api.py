@@ -8,6 +8,77 @@ import time
 from PIL import Image, ImageDraw, ImageFont
 
 
+def _build_pdf_recovery_sidecar(input_path, fitz_doc):
+    """Create the plain-value recovery source model for pdf_to_excel()."""
+    from src.common.pdf_recovery_models import SourceDocument, SourcePage
+
+    pages = []
+    for page_number in range(1, len(fitz_doc) + 1):
+        page = fitz_doc[page_number - 1]
+        pages.append(SourcePage(
+            page_number=page_number,
+            width=float(page.rect.width),
+            height=float(page.rect.height),
+        ))
+    return SourceDocument(
+        source_path=input_path,
+        source_name=os.path.basename(input_path),
+        file_size=os.path.getsize(input_path),
+        page_count=len(fitz_doc),
+        pages=pages,
+    )
+
+
+def _recovery_block_from_ir(page_number, ir, method):
+    """Build a serializable block from an existing IR result only."""
+    from src.common.pdf_recovery_models import RecoveryBlock, RecoveryCell
+    from src.common.pdf_table_ir import ir_to_rows
+
+    rows = ir_to_rows(ir)
+    cells = []
+    # Page-local IR rows have reliable page ownership.  Global fallback IR is
+    # deliberately passed as page_number=0 and gets unknown cell ownership.
+    source_page = page_number if page_number > 0 else None
+    for row_index, row in enumerate(rows):
+        for column_index, value in enumerate(row):
+            cells.append(RecoveryCell(
+                row_index=row_index,
+                column_index=column_index,
+                value=value,
+                source_page=source_page,
+                original_text=value if isinstance(value, str) else None,
+                method=method,
+            ))
+    return RecoveryBlock(
+        block_id=f"p{page_number}-b1" if page_number > 0 else "global-b1",
+        page_number=page_number,
+        block_type="table",
+        method=method,
+        rows=rows,
+        cells=cells,
+    )
+
+
+def _build_pdf_recovery_result(source_document, blocks, routes, output_path):
+    from src.common.pdf_recovery_models import RecoveryResult, RouteDecision
+
+    for page in source_document.pages:
+        route = routes.get(page.page_number, {})
+        page.routing_decision = RouteDecision(
+            page_number=page.page_number,
+            selected_method=route.get("selected_method", "unknown"),
+            candidate_count=int(route.get("candidate_count", 0)),
+            used_ocr=bool(route.get("used_ocr", False)),
+            used_layout_fallback=bool(route.get("used_layout_fallback", False)),
+        )
+    return RecoveryResult(
+        source_document=source_document,
+        blocks=blocks,
+        structural_confidence=None,
+        output_path=output_path,
+    ).to_dict()
+
+
 # ============================================================
 # 统一错误结果类型
 # ============================================================
@@ -1340,13 +1411,23 @@ def pdf_to_excel(input_path: str, output_path: str = None, mode: str = "advanced
         page_irs = []  # [(page_num, ir)]
         has_structured = False
         page_images_map = {}  # page_num -> [image_info]
-
         # v1.2: 打开 fitz 文档用于图片提取和 OCR
         fitz_doc = fitz.open(input_path)
+        recovery_source = _build_pdf_recovery_sidecar(input_path, fitz_doc)
+        recovery_blocks = []
+        recovery_routes = {}
+        page_ocr_used = {}
 
         with pdfplumber.open(input_path) as pdf:
             for page_num, page in enumerate(pdf.pages, 1):
-                ir = _extract_page_best(page, page_num)
+                route_metadata = {}
+                ir = _extract_page_best(page, page_num, metadata=route_metadata)
+                page_metadata = recovery_source.pages[page_num - 1]
+                page_metadata.text_char_count = len(getattr(page, "chars", []) or [])
+                page_metadata.has_text_layer = page_metadata.text_char_count > 0
+                selected_method = "none"
+                used_ocr = False
+                used_layout_fallback = False
                 if ir is not None:
                     # v1.2 Advanced 模式：始终使用 OCR（消除所有乱码问题）
                     if mode == "advanced" and _check_tesseract_available():
@@ -1356,12 +1437,35 @@ def pdf_to_excel(input_path: str, output_path: str = None, mode: str = "advanced
                             from src.common.pdf_table_ir import fallback_block
                             ir = fallback_block(rows=ocr_rows, page=page_num,
                                                 table_id=1, confidence=0.6)
+                            used_ocr = True
+                            page_ocr_used[page_num] = True
                     page_irs.append((page_num, ir))
-                    if ir.get("meta", {}).get("mode") == "structured":
+                    ir_mode = ir.get("meta", {}).get("mode")
+                    if used_ocr:
+                        selected_method = "ocr"
+                    elif ir_mode == "structured":
+                        selected_method = "native_table"
+                    elif ir_mode == "text_fallback":
+                        selected_method = "layout_fallback"
+                        used_layout_fallback = True
+                    if ir_mode == "structured":
                         has_structured = True
+                    page_metadata.native_table_candidate_count = int(
+                        route_metadata.get("native_candidate_count", 0)
+                    )
+                    recovery_blocks.append(
+                        _recovery_block_from_ir(page_num, ir, selected_method)
+                    )
+                recovery_routes[page_num] = {
+                    "selected_method": selected_method,
+                    "candidate_count": page_metadata.native_table_candidate_count,
+                    "used_ocr": used_ocr,
+                    "used_layout_fallback": used_layout_fallback,
+                }
 
                 # v1.2: 提取每页图片
                 page_images = _extract_page_images(fitz_doc, page_num - 1)
+                page_metadata.image_count = len(page_images)
                 if page_images:
                     page_images_map[page_num] = page_images
 
@@ -1378,6 +1482,7 @@ def pdf_to_excel(input_path: str, output_path: str = None, mode: str = "advanced
                         if all_ocr_rows:
                             all_ocr_rows.append([])  # 页间空行
                         all_ocr_rows.extend(ocr_rows)
+                        page_ocr_used[pn + 1] = True
                 if all_ocr_rows:
                     from src.common.pdf_table_ir import fallback_block
                     fallback_ir = fallback_block(rows=all_ocr_rows, page=0,
@@ -1388,6 +1493,17 @@ def pdf_to_excel(input_path: str, output_path: str = None, mode: str = "advanced
                         imgs = _extract_page_images(fitz_doc, pn)
                         if imgs:
                             page_images_map[pn + 1] = imgs
+
+            if fallback_ir is not None:
+                fallback_method = "ocr" if any(page_ocr_used.values()) else "layout_fallback"
+                recovery_blocks.append(
+                    _recovery_block_from_ir(0, fallback_ir, fallback_method)
+                )
+                for route in recovery_routes.values():
+                    if route["selected_method"] == "none":
+                        route["selected_method"] = fallback_method
+                        route["used_ocr"] = fallback_method == "ocr"
+                        route["used_layout_fallback"] = fallback_method == "layout_fallback"
 
         if not page_irs and fallback_ir is None:
             raise Exception("PDF 未检测到可提取的表格或文字内容（v1.1-patch: 可能是扫描件或图片型 PDF）")
@@ -1494,6 +1610,9 @@ def pdf_to_excel(input_path: str, output_path: str = None, mode: str = "advanced
             "status": "ok",
             "output": output_path,
             "tables": total_sheets,
+            "recovery_result": _build_pdf_recovery_result(
+                recovery_source, recovery_blocks, recovery_routes, output_path
+            ),
         }
     except Exception as e:
         # 确保 fitz_doc 关闭
@@ -1581,13 +1700,14 @@ _PARAM_COMBOS = [
 ]
 
 
-def _extract_page_best(page, page_num: int) -> list:
+def _extract_page_best(page, page_num: int, metadata: dict = None) -> list:
     """对单页尝试所有参数组合，返回该页所有表格的合并 IR
 
     返回: ir_dict  — 该页所有表格合并为一个 IR，同页不拆 sheet
     如果该页无表格，返回 fallback IR（文字提取）；如果完全空白，返回 None
     """
     import pandas as pd
+    metadata = metadata if metadata is not None else {}
     from src.common.pdf_table_ir import to_table_block, safe_list
 
     best_tables = []
@@ -1622,6 +1742,9 @@ def _extract_page_best(page, page_num: int) -> list:
         from src.common.pdf_layout_parser import parse_layout_blocks
         page_rows = parse_layout_blocks(page)
         if page_rows:
+            metadata["used_layout_fallback"] = True
+            metadata["selected_method"] = "layout_fallback"
+            metadata["native_candidate_count"] = 0
             # v1.1-patch3: 根据列对齐质量计算 confidence
             col_counts = [len(r) for r in page_rows]
             max_cols = max(col_counts) if col_counts else 1
@@ -1635,6 +1758,7 @@ def _extract_page_best(page, page_num: int) -> list:
                 confidence=confidence,
             )
             return ir
+        metadata["native_candidate_count"] = 0
         return None
 
     best_tables.sort(key=lambda x: x["score"], reverse=True)
@@ -1651,6 +1775,9 @@ def _extract_page_best(page, page_num: int) -> list:
         if not is_dup:
             selected.append(candidate)
             used_dfs.append(candidate["df"])
+
+    metadata["native_candidate_count"] = len(selected)
+    metadata["selected_method"] = "native_table"
 
     # 同页所有表格合并为一个 IR（rows 拼接，表间空一行分隔）
     all_rows = []

@@ -829,6 +829,7 @@ class ConvertPage(QWidget):
         self._idx = 0
         self._total = len(self._paths)
         self._func = func
+        self._results = [None] * self._total
     
         # ── 收集每个文件的输出路径 ──────────────────────────────
         self._output_paths = []
@@ -948,6 +949,10 @@ class ConvertPage(QWidget):
         it.setData(Qt.UserRole + 3, "done")
         self._ok += 1
         self._progress.setValue(idx + 1)
+
+        if not hasattr(self, "_results") or len(self._results) != len(self._paths):
+            self._results = [None] * len(self._paths)
+        self._results[idx] = result
 
         # 记录到最近使用
         output_path = result.get("output", "") if isinstance(result, dict) else ""

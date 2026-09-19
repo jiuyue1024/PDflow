@@ -61,6 +61,7 @@ def _recovery_block_from_ir(page_number, ir, method):
 
 def _build_pdf_recovery_result(source_document, blocks, routes, output_path):
     from src.common.pdf_recovery_models import RecoveryResult, RouteDecision
+    from src.common.pdf_recovery_verify import verify_recovery_result
 
     for page in source_document.pages:
         route = routes.get(page.page_number, {})
@@ -71,12 +72,14 @@ def _build_pdf_recovery_result(source_document, blocks, routes, output_path):
             used_ocr=bool(route.get("used_ocr", False)),
             used_layout_fallback=bool(route.get("used_layout_fallback", False)),
         )
-    return RecoveryResult(
+    recovery_result = RecoveryResult(
         source_document=source_document,
         blocks=blocks,
         structural_confidence=None,
         output_path=output_path,
-    ).to_dict()
+    )
+    verify_recovery_result(recovery_result)
+    return recovery_result.to_dict()
 
 
 # ============================================================

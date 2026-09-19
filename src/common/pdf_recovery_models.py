@@ -122,6 +122,9 @@ class RecoveryResult:
     structural_confidence: Optional[float] = None
     review_required: bool = False
     output_path: Optional[str] = None
+    reliability_band: Optional[str] = None
+    review_reason_codes: List[str] = field(default_factory=list)
+    review_summaries: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         return _plain(asdict(self))

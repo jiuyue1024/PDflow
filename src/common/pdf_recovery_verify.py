@@ -211,9 +211,7 @@ def collect_recovery_issues(result: RecoveryResult) -> List[RecoveryIssue]:
 
 def verify_recovery_result(result: RecoveryResult) -> RecoveryResult:
     """Populate issues/review_required without calculating confidence."""
+    from src.common.pdf_recovery_policy import apply_review_policy
+
     result.issues = collect_recovery_issues(result)
-    result.review_required = any(
-        issue.severity in {"review", "critical"} for issue in result.issues
-    )
-    result.structural_confidence = None
-    return result
+    return apply_review_policy(result)

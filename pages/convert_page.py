@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QFrame, QLabel, QPushButton, QListWidget, QListWidgetItem,
     QProgressBar, QComboBox, QSlider, QButtonGroup, QRadioButton,
-    QFileDialog, QSizePolicy, QSpacerItem
+    QFileDialog, QSizePolicy, QSpacerItem, QDialog, QDialogButtonBox
 )
 from PySide6.QtCore import QCoreApplication, QLocale
 
@@ -141,6 +141,58 @@ QProgressBar {
 }
 QProgressBar::chunk { background-color: #4D7CFE; border-radius: 3px; }
 """
+
+RECOVERY_BAND_COPY = {
+    "clear": {
+        "status": "Clear",
+        "title": "Excel is ready",
+        "supporting": "No structural review issues were detected.",
+    },
+    "caution": {
+        "status": "Quick check recommended",
+        "title": "Excel is ready — a quick check is recommended",
+        "supporting": "Review the detected structural notes before relying on the result.",
+    },
+    "review_required": {
+        "status": "Review recommended",
+        "title": "Review recommended before using this result",
+        "supporting": "Check the detected structural issue(s) before using this result.",
+    },
+    "unusable": {
+        "status": "No usable structured result",
+        "title": "No usable structured result was recovered",
+        "supporting": "The recovery layer did not produce a usable structured result.",
+    },
+}
+
+
+def recovery_result_view(recovery_result):
+    """Return display data for an existing recovery policy result.
+
+    This deliberately reads the policy fields; it does not infer a band from
+    issues or other recovery details.  Missing/unknown policy data returns None
+    so legacy result rendering remains unchanged.
+    """
+    if not isinstance(recovery_result, dict):
+        return None
+    band = recovery_result.get("reliability_band")
+    copy = RECOVERY_BAND_COPY.get(band)
+    if copy is None:
+        return None
+    summaries = recovery_result.get("review_summaries")
+    if not isinstance(summaries, list):
+        summaries = []
+    summaries = [str(item) for item in summaries if item][:3]
+    issues = recovery_result.get("issues")
+    if not isinstance(issues, list):
+        issues = []
+    return {
+        **copy,
+        "band": band,
+        "summaries": summaries,
+        "issues": issues,
+        "review_reason_codes": recovery_result.get("review_reason_codes") or [],
+    }
 
 # ================================================================
 # 转换函数导入
@@ -394,6 +446,23 @@ class ConvertPage(QWidget):
         self._lbl_result_info = QLabel("")
         self._lbl_result_info.setStyleSheet("color: #EAECEF; font-size: 13px; background: transparent; border: none; padding: 0;")
         result_layout.addWidget(self._lbl_result_info)
+
+        self._lbl_result_status = QLabel("")
+        self._lbl_result_status.setStyleSheet("color: #8B8D98; font-size: 12px; background: transparent; border: none; padding: 0;")
+        self._lbl_result_status.setVisible(False)
+        result_layout.addWidget(self._lbl_result_status)
+
+        self._lbl_result_review = QLabel("")
+        self._lbl_result_review.setWordWrap(True)
+        self._lbl_result_review.setStyleSheet("color: #EAECEF; font-size: 13px; background: transparent; border: none; padding: 0;")
+        self._lbl_result_review.setVisible(False)
+        result_layout.addWidget(self._lbl_result_review)
+
+        self._btn_result_details = QPushButton("View details")
+        self._btn_result_details.setStyleSheet(BTN_GHOST_STYLE)
+        self._btn_result_details.setVisible(False)
+        self._btn_result_details.clicked.connect(self._show_recovery_details)
+        result_layout.addWidget(self._btn_result_details, 0, Qt.AlignLeft)
 
         # 底部留白
         main_layout.addItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))
@@ -1008,11 +1077,63 @@ class ConvertPage(QWidget):
             info += "\n智能提取完成，复杂表格建议检查微调"
 
         self._lbl_result_info.setText(info)
+        self._apply_recovery_result_view()
         self._lbl_status.setText(f"完成！({self._total}/{self._total})")
 
     # ----------------------------------------------------------------
     # i18n: 重译所有界面文字
     # ----------------------------------------------------------------
+    def _apply_recovery_result_view(self):
+        """Show policy output when the result includes a recovery sidecar."""
+        self._lbl_result_status.setVisible(False)
+        self._lbl_result_review.setVisible(False)
+        self._btn_result_details.setVisible(False)
+        self._current_recovery_view = None
+        if self._selected_type != "pdf_excel" or len(self._results) != 1:
+            return
+        result = self._results[0]
+        view = recovery_result_view(result.get("recovery_result") if isinstance(result, dict) else None)
+        if view is None:
+            return
+        self._current_recovery_view = view
+        self._lbl_result_status.setText(f"Status: {view['status']}")
+        self._lbl_result_status.setVisible(True)
+        self._lbl_result_title.setText(view["title"])
+        title_color = "#FF9500" if view["band"] in {"caution", "review_required"} else "#4D7CFE"
+        self._lbl_result_title.setStyleSheet(f"color: {title_color}; font-size: 14px; font-weight: 600; background: transparent; border: none; padding: 0;")
+        review_text = view["supporting"]
+        if view["summaries"]:
+            review_text += "\n" + "\n".join(f"• {summary}" for summary in view["summaries"])
+        self._lbl_result_review.setText(review_text)
+        self._lbl_result_review.setVisible(True)
+        self._btn_result_details.setVisible(bool(view["issues"]) and view["band"] != "clear")
+
+    def _show_recovery_details(self):
+        view = getattr(self, "_current_recovery_view", None)
+        if not view:
+            return
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Recovery details")
+        dialog.setMinimumWidth(460)
+        layout = QVBoxLayout(dialog)
+        for issue in view["issues"]:
+            if not isinstance(issue, dict):
+                continue
+            code = str(issue.get("code") or "Issue")
+            severity = str(issue.get("severity") or "")
+            summary = str(issue.get("message") or "")
+            page = issue.get("page_number")
+            if not summary:
+                summary = next((item for item in view["summaries"] if code in item), "No additional summary provided.")
+            page_text = f" · page {page}" if page is not None else ""
+            label = QLabel(f"{code} · {severity}{page_text}\n{summary}")
+            label.setWordWrap(True)
+            layout.addWidget(label)
+        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        dialog.exec()
+
     def retranslateUi(self):
         _t = QCoreApplication.translate
         ctx = "ConvertPage"

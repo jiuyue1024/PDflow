@@ -33,6 +33,7 @@ class RouteDecision:
     selected_method: str = "unknown"
     reasons: List[str] = field(default_factory=list)
     candidate_count: int = 0
+    candidate_summaries: List[Dict[str, Any]] = field(default_factory=list)
     used_ocr: bool = False
     used_layout_fallback: bool = False
 

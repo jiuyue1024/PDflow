@@ -26,6 +26,7 @@ _SUMMARY_TEMPLATES: Dict[str, str] = {
     "OCR_USED": "OCR was used to recover values on page {page}.",
     "CROSS_PAGE_SCHEMA_MISMATCH": "Adjacent pages may not share the same table structure.",
     "ROW_SHAPE_INCONSISTENCY": "Row structure varies significantly in one recovered table.",
+    "POSSIBLE_INCOMPLETE_RECOVERY": "Additional structured content may not be included in this recovered result.",
     "UNKNOWN_SOURCE_PAGE": "Some recovered values cannot be linked to a source page.",
     "EMPTY_RECOVERY": "No usable structured recovery was produced after structured recovery was attempted.",
 }

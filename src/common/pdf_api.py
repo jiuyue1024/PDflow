@@ -70,6 +70,7 @@ def _build_pdf_recovery_result(source_document, blocks, routes, output_path):
             page_number=page.page_number,
             selected_method=route.get("selected_method", "unknown"),
             candidate_count=int(route.get("candidate_count", 0)),
+            candidate_summaries=list(route.get("candidate_summaries", [])),
             used_ocr=bool(route.get("used_ocr", False)),
             used_layout_fallback=bool(route.get("used_layout_fallback", False)),
         )
@@ -1470,6 +1471,7 @@ def pdf_to_excel(input_path: str, output_path: str = None, mode: str = "advanced
                 recovery_routes[page_num] = {
                     "selected_method": selected_method,
                     "candidate_count": page_metadata.native_table_candidate_count,
+                    "candidate_summaries": route_metadata.get("candidate_summaries", []),
                     "used_ocr": used_ocr,
                     "used_layout_fallback": used_layout_fallback,
                 }
@@ -1799,6 +1801,19 @@ def _extract_page_best(page, page_num: int, metadata: dict = None) -> list:
 
     metadata["native_candidate_count"] = len(selected)
     metadata["selected_method"] = "native_table"
+    selected_ids = {id(item) for item in selected}
+    metadata["candidate_summaries"] = []
+    for candidate_index, candidate in enumerate(best_tables, 1):
+        df = candidate["df"]
+        metadata["candidate_summaries"].append({
+            "candidate_index": candidate_index,
+            "selected": id(candidate) in selected_ids,
+            "row_count": int(df.shape[0]),
+            "column_count": int(df.shape[1]),
+            "score": float(candidate["score"]),
+            "header_signature": _row_signature(df.columns),
+            "row_signatures": sorted(_table_row_signatures(df)),
+        })
 
     # 同页所有表格合并为一个 IR（rows 拼接，表间空一行分隔）
     all_rows = []

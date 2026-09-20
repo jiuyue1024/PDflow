@@ -53,6 +53,96 @@ def _header_values(block: RecoveryBlock) -> set[str]:
     }
 
 
+def _candidate_rows(summary: dict) -> set[str]:
+    return {
+        str(value).strip().casefold()
+        for value in summary.get("row_signatures", [])
+        if str(value).strip()
+    }
+
+
+def _candidate_extra_is_non_material(value: str, selected_rows: set[str], selected_headers: set[str]) -> bool:
+    if value in selected_headers:
+        return True
+    if any(value in row for row in selected_rows):
+        return True
+    return "page" in value and "of" in value
+
+
+def _append_candidate_completeness_issues(result: RecoveryResult, issues: List[RecoveryIssue]) -> None:
+    for page in result.source_document.pages:
+        route = page.routing_decision
+        summaries = list(getattr(route, "candidate_summaries", []) or []) if route else []
+        if not summaries:
+            continue
+        selected = [summary for summary in summaries if summary.get("selected")]
+        if not selected:
+            continue
+        selected_rows = set().union(*(_candidate_rows(summary) for summary in selected))
+        selected_headers = {
+            str(summary.get("header_signature", "")).strip().casefold()
+            for summary in selected
+            if summary.get("header_signature")
+        }
+        selected_count = len(selected_rows)
+        if selected_count < 3:
+            continue
+        for alternative in summaries:
+            if alternative.get("selected"):
+                continue
+            alternative_rows = _candidate_rows(alternative)
+            if not alternative_rows:
+                continue
+            shared = alternative_rows & selected_rows
+            unique = alternative_rows - selected_rows
+            material_alternative = {
+                value for value in alternative_rows
+                if not _candidate_extra_is_non_material(value, selected_rows, selected_headers)
+            }
+            if len(shared) < 3:
+                # A non-overlapping substantial candidate is evidence of an
+                # additional structured region, but tiny/noisy candidates are
+                # intentionally ignored.
+                if len(alternative_rows) >= 3 and selected_count >= 3:
+                    if not material_alternative:
+                        continue
+                    issues.append(RecoveryIssue(
+                        code="POSSIBLE_INCOMPLETE_RECOVERY",
+                        severity="review",
+                        page_number=page.page_number,
+                        message="Additional structured content may not be included in this recovered result.",
+                        evidence={
+                            "reason": "independent_structured_region",
+                            "selected_row_count": selected_count,
+                            "alternative_row_count": len(alternative_rows),
+                            "unique_alternative_row_count": len(alternative_rows),
+                            "candidate_index": alternative.get("candidate_index"),
+                        },
+                    ))
+                continue
+            overlap = len(shared) / min(len(alternative_rows), selected_count)
+            material_unique = {
+                value for value in unique
+                if not _candidate_extra_is_non_material(value, selected_rows, selected_headers)
+            }
+            if overlap < 0.60 or not material_unique:
+                continue
+            issues.append(RecoveryIssue(
+                code="POSSIBLE_INCOMPLETE_RECOVERY",
+                severity="review",
+                page_number=page.page_number,
+                message="Additional structured content may not be included in this recovered result.",
+                evidence={
+                    "reason": "fuller_compatible_candidate",
+                    "selected_row_count": selected_count,
+                    "alternative_row_count": len(alternative_rows),
+                    "shared_row_count": len(shared),
+                    "unique_alternative_row_count": len(material_unique),
+                    "candidate_index": alternative.get("candidate_index"),
+                },
+            ))
+
+
 def _append_route_issues(result: RecoveryResult, issues: List[RecoveryIssue]) -> None:
     for page in result.source_document.pages:
         route = page.routing_decision
@@ -137,6 +227,26 @@ def _append_cross_page_issues(blocks: Sequence[RecoveryBlock], issues: List[Reco
         previous_schema = max(previous_widths, default=0)
         current_schema = max(current_widths, default=0)
         if previous_schema == current_schema:
+            previous_data_rows = max(len(_usable_rows(previous)) - 1, 0)
+            current_data_rows = max(len(_usable_rows(current)) - 1, 0)
+            if (
+                previous_data_rows >= 6
+                and current_data_rows >= 2
+                and current_data_rows <= previous_data_rows * 0.35
+            ):
+                issues.append(RecoveryIssue(
+                    code="POSSIBLE_INCOMPLETE_RECOVERY",
+                    severity="review",
+                    page_number=current.page_number,
+                    message="Additional structured content may not be included in this recovered result.",
+                    evidence={
+                        "reason": "compatible_cross_page_row_drop",
+                        "affected_pages": [previous.page_number, current.page_number],
+                        "selected_data_row_counts": [previous_data_rows, current_data_rows],
+                        "column_count": current_schema,
+                        "header_overlap": round(overlap, 4),
+                    },
+                ))
             continue
         mismatch_ratio = abs(previous_schema - current_schema) / max(
             previous_schema, current_schema, 1
@@ -180,6 +290,7 @@ def collect_recovery_issues(result: RecoveryResult) -> List[RecoveryIssue]:
     """Return deterministic diagnostics for an already-built sidecar."""
     issues: List[RecoveryIssue] = []
     _append_route_issues(result, issues)
+    _append_candidate_completeness_issues(result, issues)
     _append_row_shape_issues(result.blocks, issues)
     _append_cross_page_issues(result.blocks, issues)
     _append_unknown_page_issues(result.blocks, issues)

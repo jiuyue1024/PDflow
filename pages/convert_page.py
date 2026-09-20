@@ -7,12 +7,13 @@
 import os
 
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QColor
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QFrame, QLabel, QPushButton, QListWidget, QListWidgetItem,
     QProgressBar, QComboBox, QSlider, QButtonGroup, QRadioButton,
-    QFileDialog, QSizePolicy, QSpacerItem, QDialog, QDialogButtonBox
+    QFileDialog, QSizePolicy, QSpacerItem, QDialog, QDialogButtonBox,
+    QTableWidget, QTableWidgetItem, QAbstractItemView
 )
 from PySide6.QtCore import QCoreApplication, QLocale
 
@@ -205,6 +206,7 @@ from src.common.pdf_api import (
 )
 from src.common.recent_files_manager import add_record
 from src.common.error_handler import ErrorHandler, ErrorType
+from src.common.pdf_review_session import create_review_session, ReviewSession
 
 # ================================================================
 # 转换类型配置
@@ -256,6 +258,107 @@ class ConvertWorker(QThread):
             self.finished.emit(self.idx, r)
         except Exception as e:
             self.error.emit(self.idx, str(e))
+
+
+class RecoveryReviewDialog(QDialog):
+    """Minimal one-block review surface for Slice 4A."""
+
+    def __init__(self, session: ReviewSession, parent=None):
+        super().__init__(parent)
+        self.session = session
+        self.setWindowTitle("Review result")
+        self.setMinimumSize(620, 360)
+
+        layout = QVBoxLayout(self)
+        intro = QLabel("Edit recovered cell values only. Source and issue information cannot be changed.")
+        intro.setWordWrap(True)
+        layout.addWidget(intro)
+
+        self._dirty_label = QLabel("No unsaved edits")
+        layout.addWidget(self._dirty_label)
+
+        self._table = QTableWidget(session.row_count, session.column_count, self)
+        self._table.setEditTriggers(
+            QAbstractItemView.DoubleClicked
+            | QAbstractItemView.SelectedClicked
+            | QAbstractItemView.EditKeyPressed
+        )
+        self._table.setSelectionBehavior(QAbstractItemView.SelectItems)
+        self._table.setAlternatingRowColors(True)
+        self._table.cellChanged.connect(self._on_cell_changed)
+        self._populate_table()
+        self._table.currentCellChanged.connect(self._on_current_cell_changed)
+        layout.addWidget(self._table)
+
+        self._context_label = QLabel("Select a cell to view source and issue context.")
+        self._context_label.setWordWrap(True)
+        layout.addWidget(self._context_label)
+
+        button_row = QHBoxLayout()
+        button_row.addStretch()
+        self._cancel_button = QPushButton("Cancel")
+        self._cancel_button.clicked.connect(self.reject)
+        button_row.addWidget(self._cancel_button)
+        self._apply_button = QPushButton("Apply")
+        self._apply_button.clicked.connect(self._apply)
+        button_row.addWidget(self._apply_button)
+        layout.addLayout(button_row)
+        self._update_dirty_label()
+
+    def _populate_table(self):
+        self._table.blockSignals(True)
+        for row in range(self.session.row_count):
+            for column in range(self.session.column_count):
+                if column >= len(self.session.original_rows[row]):
+                    item = QTableWidgetItem("")
+                    item.setFlags(Qt.NoItemFlags)
+                else:
+                    value = self.session.value_at(row, column)
+                    item = QTableWidgetItem("" if value is None else str(value))
+                    messages = self.session.issue_markers.get((row, column), [])
+                    source_page = self.session.source_page_at(row, column)
+                    context = []
+                    if source_page is not None:
+                        context.append(f"Source: Page {source_page}")
+                    else:
+                        context.append("Source page unavailable")
+                    if messages:
+                        context.append("Issue: " + " ".join(messages))
+                        item.setBackground(QColor("#3A2B1A"))
+                    item.setToolTip("\n".join(context))
+                self._table.setItem(row, column, item)
+        self._table.blockSignals(False)
+
+    def _on_cell_changed(self, row, column):
+        if row >= self.session.row_count or column >= len(self.session.original_rows[row]):
+            return
+        item = self._table.item(row, column)
+        self.session.set_value(row, column, item.text() if item is not None else "")
+        self._update_dirty_label()
+        self._on_current_cell_changed(row, column, -1, -1)
+
+    def _on_current_cell_changed(self, row, column, _old_row, _old_column):
+        if row < 0 or column < 0 or row >= self.session.row_count:
+            return
+        source_page = self.session.source_page_at(row, column)
+        source_text = f"Source: Page {source_page}" if source_page is not None else "Source page unavailable"
+        messages = self.session.issue_markers.get((row, column), [])
+        issue_text = " Issue: " + " ".join(messages) if messages else ""
+        self._context_label.setText(source_text + issue_text)
+
+    def _update_dirty_label(self):
+        if self.session.dirty:
+            self._dirty_label.setText(f"Unsaved edits: {self.session.changed_cell_count} cells edited")
+        else:
+            self._dirty_label.setText("No unsaved edits")
+
+    def _apply(self):
+        self.session.apply()
+        self.accept()
+
+    def reject(self):
+        self.session.cancel()
+        super().reject()
 
 
 # ================================================================
@@ -463,6 +566,17 @@ class ConvertPage(QWidget):
         self._btn_result_details.setVisible(False)
         self._btn_result_details.clicked.connect(self._show_recovery_details)
         result_layout.addWidget(self._btn_result_details, 0, Qt.AlignLeft)
+
+        self._btn_result_review = QPushButton("Review result")
+        self._btn_result_review.setStyleSheet(BTN_OUTLINE_STYLE)
+        self._btn_result_review.setVisible(False)
+        self._btn_result_review.clicked.connect(self._open_review_session)
+        result_layout.addWidget(self._btn_result_review, 0, Qt.AlignLeft)
+
+        self._lbl_result_session = QLabel("")
+        self._lbl_result_session.setStyleSheet("color: #34C759; font-size: 12px; background: transparent; border: none; padding: 0;")
+        self._lbl_result_session.setVisible(False)
+        result_layout.addWidget(self._lbl_result_session)
 
         # 底部留白
         main_layout.addItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))
@@ -1088,14 +1202,25 @@ class ConvertPage(QWidget):
         self._lbl_result_status.setVisible(False)
         self._lbl_result_review.setVisible(False)
         self._btn_result_details.setVisible(False)
+        self._btn_result_review.setVisible(False)
+        self._lbl_result_session.setVisible(False)
         self._current_recovery_view = None
+        self._current_recovery_result = None
+        self._review_session = None
+        self._reviewed_data = None
         if self._selected_type != "pdf_excel" or len(self._results) != 1:
             return
         result = self._results[0]
-        view = recovery_result_view(result.get("recovery_result") if isinstance(result, dict) else None)
+        recovery_result = result.get("recovery_result") if isinstance(result, dict) else None
+        view = recovery_result_view(recovery_result)
         if view is None:
+            if create_review_session(recovery_result) is not None:
+                self._current_recovery_result = recovery_result
+                self._btn_result_review.setStyleSheet(BTN_GHOST_STYLE)
+                self._btn_result_review.setVisible(True)
             return
         self._current_recovery_view = view
+        self._current_recovery_result = recovery_result
         self._lbl_result_status.setText(f"Status: {view['status']}")
         self._lbl_result_status.setVisible(True)
         self._lbl_result_title.setText(view["title"])
@@ -1107,6 +1232,29 @@ class ConvertPage(QWidget):
         self._lbl_result_review.setText(review_text)
         self._lbl_result_review.setVisible(True)
         self._btn_result_details.setVisible(bool(view["issues"]) and view["band"] != "clear")
+        if create_review_session(recovery_result) is not None:
+            self._btn_result_review.setStyleSheet(
+                BTN_GHOST_STYLE if view["band"] == "clear" else BTN_OUTLINE_STYLE
+            )
+            self._btn_result_review.setVisible(True)
+
+    def _open_review_session(self):
+        recovery_result = getattr(self, "_current_recovery_result", None)
+        if not isinstance(recovery_result, dict):
+            return
+        if self._review_session is None:
+            self._review_session = create_review_session(recovery_result)
+        if self._review_session is None:
+            return
+        dialog = RecoveryReviewDialog(self._review_session, self)
+        if dialog.exec() == QDialog.Accepted and self._review_session.applied:
+            self._reviewed_data = self._review_session.reviewed_data
+            count = self._review_session.changed_cell_count
+            self._lbl_result_session.setText(
+                "Reviewed changes saved for this session."
+                + (f" {count} cells edited." if count else "")
+            )
+            self._lbl_result_session.setVisible(True)
 
     def _show_recovery_details(self):
         view = getattr(self, "_current_recovery_view", None)

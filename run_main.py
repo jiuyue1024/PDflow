@@ -9,7 +9,6 @@ import os
 import json
 
 _root = sys._MEIPASS if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(_root, "pages"))
 sys.path.insert(0, _root)
 
 
@@ -19,6 +18,7 @@ from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QColor, QPen, QPainter
 
 from src.common.paths import resource_path, data_path, get_app_root
+from src.common.version import APP_DISPLAY_VERSION
 from src.common.theme_manager import ThemeManager
 from src.common.theme import DARK_COLORS, LIGHT_COLORS, get_current_theme
 
@@ -74,7 +74,7 @@ def _ensure_desktop_shortcut():
         pass  # 快捷方式创建失败不影响应用启动
 
 # 动态导入生成的 UI 类
-from main_window import Ui_MainWindow
+from pages.main_window import Ui_MainWindow
 
 # ── 导入各功能页面 ──
 from pages.home_page import HomePage
@@ -230,7 +230,7 @@ def _setup_about_button(ui):
     separator.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
     # ── "关于"按钮（纯 QPushButton，避免内嵌 QLabel 的 QSS 兼容问题）──
-    btn_about = QPushButton(_tr("关于印流PDflow") + "  V1.2")
+    btn_about = QPushButton(_tr("关于印流PDflow") + f"  {APP_DISPLAY_VERSION}")
     btn_about.setObjectName("btnAbout")
     btn_about.setCheckable(False)
     btn_about.setCursor(Qt.PointingHandCursor)
@@ -763,7 +763,7 @@ def _show_about_dialog():
     version_row.setSpacing(8)
     version_row.setAlignment(Qt.AlignVCenter)
 
-    ver_badge = QLabel("V1.2")
+    ver_badge = QLabel(APP_DISPLAY_VERSION)
     ver_badge.setObjectName("aboutVersionBadge")
     ver_badge.setAlignment(Qt.AlignCenter)
     ver_badge.setFixedHeight(22)
@@ -1382,7 +1382,7 @@ def main():
     tray_icon = None
     if QSystemTrayIcon.isSystemTrayAvailable():
         tray_icon = QSystemTrayIcon(QIcon(icon_path), app)
-        tray_icon.setToolTip("印流PDflow V1.2")
+        tray_icon.setToolTip(f"印流PDflow {APP_DISPLAY_VERSION}")
 
         tray_menu = QMenu()
 

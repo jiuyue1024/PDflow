@@ -2,7 +2,8 @@
 chcp 65001 >nul
 
 set "PROJECT_DIR=%~dp0"
-set "PYTHON_EXE=%PROJECT_DIR%pyside6_env\Scripts\python.exe"
+set "PYTHON_EXE=%PROJECT_DIR%venv\Scripts\python.exe"
+if not exist "%PYTHON_EXE%" set "PYTHON_EXE=%PROJECT_DIR%pyside6_env\Scripts\python.exe"
 set "SCRIPT=%PROJECT_DIR%run_main.py"
 set "LOG_FILE=%PROJECT_DIR%run_log.txt"
 

@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 from src.common.recent_files_manager import get_recent_files, get_status_text, clear_records
 from translations.translation_manager import _ as _tr
+from src.common.version import APP_DISPLAY_VERSION
 
 
 # ================================================================
@@ -713,7 +714,7 @@ class Ui_HomePage(object):
             "font-weight: 800; "
         )
         title_row.addWidget(self.title_label)
-        self.badge = Badge("V1.2")
+        self.badge = Badge(APP_DISPLAY_VERSION)
         title_row.addWidget(self.badge)
         title_row.addStretch()
         self.hero_layout.addLayout(title_row)

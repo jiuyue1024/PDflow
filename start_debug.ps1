@@ -2,7 +2,10 @@
 # 带终端日志，日志同时保存到 run_log.txt
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$pythonExe = Join-Path $scriptDir "pyside6_env\Scripts\python.exe"
+$pythonExe = Join-Path $scriptDir "venv\Scripts\python.exe"
+if (-not (Test-Path $pythonExe)) {
+    $pythonExe = Join-Path $scriptDir "pyside6_env\Scripts\python.exe"
+}
 $mainScript = Join-Path $scriptDir "run_main.py"
 $logFile = Join-Path $scriptDir "run_log.txt"
 

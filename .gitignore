@@ -27,6 +27,8 @@ build/upx*.exe
 # 虚拟环境
 pyside6_env/
 venv/
+.venv_h4b/
+.tmp_h4b/
 .env/
 
 # 项目输出
@@ -109,6 +111,8 @@ src/common/app_config.json
 
 # 构建产物子目录
 build/PDflow_*/
+build/h4b-dist/
+build/h4b-work/
 build/7z-extracted/
 
 # 测试输出

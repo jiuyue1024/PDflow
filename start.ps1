@@ -2,7 +2,10 @@
 # 日常使用 - 无终端窗口
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$pythonExe = Join-Path $scriptDir "pyside6_env\Scripts\pythonw.exe"
+$pythonExe = Join-Path $scriptDir "venv\Scripts\pythonw.exe"
+if (-not (Test-Path $pythonExe)) {
+    $pythonExe = Join-Path $scriptDir "pyside6_env\Scripts\pythonw.exe"
+}
 $mainScript = Join-Path $scriptDir "run_main.py"
 
 if (-not (Test-Path $pythonExe)) {

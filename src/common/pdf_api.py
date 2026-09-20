@@ -4,6 +4,7 @@
 import fitz
 import io
 import os
+import re
 import time
 from PIL import Image, ImageDraw, ImageFont
 
@@ -923,6 +924,13 @@ def _check_text_quality(ir_or_rows) -> dict:
     }
 
 
+def _should_use_ocr(mode: str, ir_or_rows, ocr_available: bool) -> bool:
+    """Decide whether Advanced mode needs OCR for an existing page recovery."""
+    if mode != "advanced" or not ocr_available:
+        return False
+    return bool(_check_text_quality(ir_or_rows).get("need_ocr", False))
+
+
 def _extract_text_layer_lines(fitz_page) -> list:
     """提取 PDF 文本层的行信息（带 y 坐标）
 
@@ -1433,7 +1441,7 @@ def pdf_to_excel(input_path: str, output_path: str = None, mode: str = "advanced
                 used_layout_fallback = False
                 if ir is not None:
                     # v1.2 Advanced 模式：始终使用 OCR（消除所有乱码问题）
-                    if mode == "advanced" and _check_tesseract_available():
+                    if _should_use_ocr(mode, ir, _check_tesseract_available()):
                         fitz_page = fitz_doc[page_num - 1]
                         ocr_rows = _ocr_extract_page(fitz_page)
                         if ocr_rows:
@@ -1499,9 +1507,12 @@ def pdf_to_excel(input_path: str, output_path: str = None, mode: str = "advanced
 
             if fallback_ir is not None:
                 fallback_method = "ocr" if any(page_ocr_used.values()) else "layout_fallback"
-                recovery_blocks.append(
-                    _recovery_block_from_ir(0, fallback_ir, fallback_method)
-                )
+                if not _global_fallback_matches_page_blocks(fallback_ir, page_irs):
+                    recovery_blocks.append(
+                        _recovery_block_from_ir(0, fallback_ir, fallback_method)
+                    )
+                else:
+                    fallback_ir = None
                 for route in recovery_routes.values():
                     if route["selected_method"] == "none":
                         route["selected_method"] = fallback_method
@@ -1771,13 +1782,20 @@ def _extract_page_best(page, page_num: int, metadata: dict = None) -> list:
 
     for candidate in best_tables:
         is_dup = False
-        for existing in used_dfs:
+        replaced = False
+        for existing_idx, existing in enumerate(used_dfs):
             if _is_duplicate_table(candidate["df"], existing):
                 is_dup = True
                 break
+            if _candidate_extends(candidate["df"], existing):
+                selected[existing_idx] = candidate
+                used_dfs[existing_idx] = candidate["df"]
+                replaced = True
+                break
         if not is_dup:
-            selected.append(candidate)
-            used_dfs.append(candidate["df"])
+            if not replaced:
+                selected.append(candidate)
+                used_dfs.append(candidate["df"])
 
     metadata["native_candidate_count"] = len(selected)
     metadata["selected_method"] = "native_table"
@@ -1966,19 +1984,32 @@ def _is_duplicate_table(df1, df2) -> bool:
     3. 首行（表头）完全相同 + 行列数相同
     """
     overlap = _table_content_overlap(df1, df2)
+    row_overlap, matched_rows = _table_row_overlap(df1, df2)
+    if matched_rows >= 3 and row_overlap >= 0.60:
+        rows1 = _table_row_signatures(df1)
+        rows2 = _table_row_signatures(df2)
+        if rows1 and rows2:
+            # Do not suppress a higher-scoring parse merely because most of
+            # its rows overlap: it may contain additional business data.
+            # Incoming rows are safe only when any rows absent from the
+            # retained candidate are recognizable fragments/metadata. Extra
+            # business rows therefore prevent suppression.
+            if _row_extras_are_safe(rows1 - rows2, rows2, df2):
+                return True
+            return False
 
-    if overlap > 0.35:
+    if overlap > 0.35 and _same_or_contained_rows(df1, df2):
         return True
 
     same_shape = (df1.shape[0] == df2.shape[0]) and (df1.shape[1] == df2.shape[1])
 
-    if same_shape and overlap > 0.20:
+    if same_shape and overlap > 0.20 and _same_or_contained_rows(df1, df2):
         return True
 
     if same_shape and df1.shape[1] > 0:
         header1 = [str(v).strip() for v in df1.iloc[0]] if df1.shape[0] > 0 else []
         header2 = [str(v).strip() for v in df2.iloc[0]] if df2.shape[0] > 0 else []
-        if header1 and header2 and header1 == header2:
+        if header1 and header2 and header1 == header2 and _same_or_contained_rows(df1, df2):
             return True
 
     return False
@@ -2017,6 +2048,88 @@ def _table_content_overlap(df1, df2) -> float:
     smaller = min(len(cells1), len(cells2))
 
     return len(intersection) / smaller
+
+
+def _row_signature(row) -> str:
+    """Normalise a row for conservative cross-candidate comparison."""
+    value = "".join(str(item).strip() for item in row if str(item).strip())
+    return re.sub(r"\s+", "", value).casefold()
+
+
+def _table_row_signatures(df):
+    rows = {_row_signature(row) for row in df.itertuples(index=False, name=None)}
+    rows.discard("")
+    return rows
+
+
+def _row_extras_are_safe(extras, retained_rows, retained_df):
+    header_signature = _row_signature(retained_df.columns)
+    if all(
+        extra in retained_rows
+        or any(extra in retained for retained in retained_rows)
+        or (header_signature and extra == header_signature)
+        or _row_is_extraction_metadata(extra)
+        for extra in extras
+    ):
+        return True
+    return False
+
+
+def _row_is_extraction_metadata(signature):
+    return "page" in signature and "of" in signature
+
+
+def _same_or_contained_rows(df1, df2):
+    rows1 = _table_row_signatures(df1)
+    rows2 = _table_row_signatures(df2)
+    if not rows1 or not rows2:
+        return False
+    return _row_extras_are_safe(rows1 - rows2, rows2, df2)
+
+
+def _table_row_overlap(df1, df2):
+    """Return (matched/minimum rows, matched rows) for candidate tables."""
+    rows1 = {_row_signature(row) for row in df1.itertuples(index=False, name=None)}
+    rows2 = {_row_signature(row) for row in df2.itertuples(index=False, name=None)}
+    rows1.discard("")
+    rows2.discard("")
+    if not rows1 or not rows2:
+        return 0.0, 0
+    matched = len(rows1 & rows2)
+    return matched / min(len(rows1), len(rows2)), matched
+
+
+def _candidate_extends(candidate_df, retained_df):
+    """Return True when a later candidate safely supersedes a shorter parse."""
+    candidate_rows = _table_row_signatures(candidate_df)
+    retained_rows = _table_row_signatures(retained_df)
+    if len(candidate_rows) <= len(retained_rows) or len(retained_rows) < 3:
+        return False
+    matched = candidate_rows & retained_rows
+    return len(matched) == len(retained_rows) and len(matched) / len(candidate_rows) >= 0.60
+
+
+def _normalised_recovery_rows(rows):
+    """Return non-empty rows in a stable form for fallback comparison."""
+    result = []
+    for row in rows or []:
+        signature = _row_signature(row)
+        if signature:
+            result.append(signature)
+    return result
+
+
+def _global_fallback_matches_page_blocks(fallback_ir, page_irs) -> bool:
+    """Suppress only an exact global replay of page-local recovered rows."""
+    if not fallback_ir or not page_irs:
+        return False
+    from src.common.pdf_table_ir import ir_to_rows
+
+    global_rows = _normalised_recovery_rows(ir_to_rows(fallback_ir))
+    page_rows = []
+    for _page_number, ir in page_irs:
+        page_rows.extend(_normalised_recovery_rows(ir_to_rows(ir)))
+    return bool(global_rows) and global_rows == page_rows
 
 # ============================================================
 # PDF 转 PPT

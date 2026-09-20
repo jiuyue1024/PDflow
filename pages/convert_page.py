@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QFrame, QLabel, QPushButton, QListWidget, QListWidgetItem,
     QProgressBar, QComboBox, QSlider, QButtonGroup, QRadioButton,
     QFileDialog, QSizePolicy, QSpacerItem, QDialog, QDialogButtonBox,
-    QTableWidget, QTableWidgetItem, QAbstractItemView
+    QTableWidget, QTableWidgetItem, QAbstractItemView, QMessageBox
 )
 from PySide6.QtCore import QCoreApplication, QLocale
 
@@ -207,6 +207,7 @@ from src.common.pdf_api import (
 from src.common.recent_files_manager import add_record
 from src.common.error_handler import ErrorHandler, ErrorType
 from src.common.pdf_review_session import create_review_session, ReviewSession
+from src.common.pdf_review_export import export_reviewed_xlsx, ReviewedExportError
 
 # ================================================================
 # 转换类型配置
@@ -577,6 +578,12 @@ class ConvertPage(QWidget):
         self._lbl_result_session.setStyleSheet("color: #34C759; font-size: 12px; background: transparent; border: none; padding: 0;")
         self._lbl_result_session.setVisible(False)
         result_layout.addWidget(self._lbl_result_session)
+
+        self._btn_reviewed_export = QPushButton("Save reviewed copy")
+        self._btn_reviewed_export.setStyleSheet(BTN_OUTLINE_STYLE)
+        self._btn_reviewed_export.setVisible(False)
+        self._btn_reviewed_export.clicked.connect(self._save_reviewed_copy)
+        result_layout.addWidget(self._btn_reviewed_export, 0, Qt.AlignLeft)
 
         # 底部留白
         main_layout.addItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))
@@ -1204,6 +1211,7 @@ class ConvertPage(QWidget):
         self._btn_result_details.setVisible(False)
         self._btn_result_review.setVisible(False)
         self._lbl_result_session.setVisible(False)
+        self._btn_reviewed_export.setVisible(False)
         self._current_recovery_view = None
         self._current_recovery_result = None
         self._review_session = None
@@ -1255,6 +1263,40 @@ class ConvertPage(QWidget):
                 + (f" {count} cells edited." if count else "")
             )
             self._lbl_result_session.setVisible(True)
+            self._btn_reviewed_export.setVisible(True)
+
+    def _save_reviewed_copy(self):
+        if not getattr(self, "_reviewed_data", None):
+            return
+        if not self._results or not isinstance(self._results[0], dict):
+            return
+        original_path = self._results[0].get("output")
+        recovery_result = self._results[0].get("recovery_result")
+        if not original_path or not isinstance(recovery_result, dict):
+            return
+        stem, _ = os.path.splitext(original_path)
+        default_path = f"{stem}_reviewed.xlsx"
+        destination, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save reviewed copy",
+            default_path,
+            "Excel files (*.xlsx)",
+        )
+        if not destination:
+            return
+        try:
+            export_reviewed_xlsx(
+                original_path,
+                destination,
+                recovery_result,
+                [self._reviewed_data],
+            )
+        except ReviewedExportError as exc:
+            QMessageBox.warning(self, "Reviewed copy not saved", str(exc))
+            return
+        self._lbl_result_session.setText(
+            self._lbl_result_session.text() + "\nReviewed copy saved."
+        )
 
     def _show_recovery_details(self):
         view = getattr(self, "_current_recovery_view", None)

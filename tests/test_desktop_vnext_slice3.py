@@ -40,6 +40,7 @@ class DesktopVNextSlice3Tests(unittest.TestCase):
         page._btn_result_details = _Button()
         page._btn_result_review = _Button()
         page._lbl_result_session = _Widget()
+        page._btn_reviewed_export = _Button()
         page._lbl_result_title = _Widget()
         page._apply_recovery_result_view = __import__("pages.convert_page", fromlist=["ConvertPage"]).ConvertPage._apply_recovery_result_view.__get__(page)
         return page

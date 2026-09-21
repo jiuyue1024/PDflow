@@ -192,7 +192,9 @@ def setup_navigation(ui):
 
     # 默认选中首页
     pages_stack.setCurrentIndex(0)
-    ui.contentTitle.hide()
+    # The shared shell owns page context in the top bar. Keep the existing
+    # page stack and navigation contract unchanged for vNext pages.
+    ui.contentTitle.show()
     ui.btnHome.setChecked(True)
 
     # 连接导航按钮切换指示器颜色
@@ -957,6 +959,9 @@ def _register_pages_for_translation(pages_stack, translation_manager):
 
 def _retranslate_sidebar(ui):
     """翻译侧边栏导航按钮文字"""
+    ui.navSectionWorkspace.setText(_tr("工作区"))
+    ui.navSectionTools.setText(_tr("工具"))
+    ui.navSectionTemplates.setText(_tr("模板"))
     ui.navTitle.setText(_tr("印流PDflow"))
     ui.btnHome.setText(_tr("首页"))
     ui.btnMerge.setText(_tr("合并拆分"))

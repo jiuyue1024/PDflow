@@ -1140,6 +1140,29 @@ QPushButton#btnSettings:hover {
 }
 
 /* 内容区域 */
+/* UI-M1 shared shell */
+QWidget#topBar {
+    background-color: {{card_bg}};
+    border-bottom: 1px solid {{border}};
+}
+
+QLabel#topBarTitle {
+    color: {{text_main}};
+    font-size: 20px;
+    font-weight: 600;
+    padding: 0;
+}
+
+QLabel#navSectionLabel {
+    color: {{text_muted}};
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QPushButton:focus {
+    border: 1px solid {{border_focus}};
+}
+
 QWidget#contentArea {
     background-color: {{bg}};
 }

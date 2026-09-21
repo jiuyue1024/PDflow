@@ -158,6 +158,10 @@ zh_TW = {
     "清空全部": "清除全部",
     "已选 0 个文件": "已選 0 個檔案",
 
+    "工作区": "工作區",
+    "工具": "工具",
+    "模板": "範本",
+
     # === HomePage ===
     "首页": "首頁",
     "工具箱": "工具箱",
@@ -333,6 +337,10 @@ en_US = {
     "选择要压缩的PDF文件（支持多选）": "Select PDF files to compress (multi-select)",
     "清空全部": "Clear All",
     "已选 0 个文件": "0 files selected",
+
+    "工作区": "Workspace",
+    "工具": "Tools",
+    "模板": "Templates",
 
     # === HomePage ===
     "首页": "Home",

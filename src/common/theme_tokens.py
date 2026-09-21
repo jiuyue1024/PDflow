@@ -20,11 +20,41 @@ from __future__ import annotations
 from typing import Dict, Optional
 
 
+# UI-M1 semantic aliases. Existing compatibility tokens remain available to
+# legacy pages while the shared shell uses this compact vocabulary.
+UI_SPACING = {
+    "space-1": 4, "space-2": 8, "space-3": 12,
+    "space-4": 16, "space-5": 20, "space-6": 24,
+    "space-7": 32, "space-8": 40, "space-9": 48,
+}
+UI_RADII = {"radius-sm": 4, "radius-md": 6, "radius-lg": 8}
+UI_CONTROL_HEIGHTS = {"control-sm": 32, "control-md": 36, "control-lg": 40}
+UI_ICON_SIZES = {"icon-sm": 16, "icon-md": 20, "icon-lg": 24}
+UI_TYPOGRAPHY = {
+    "type-page-title": 20, "type-section-title": 16,
+    "type-card-title": 14, "type-body": 14, "type-helper": 13,
+    "type-meta": 12, "type-nav": 13,
+}
+
+
 def _build_tokens_from_theme(colors: Dict[str, str]) -> Dict[str, str]:
     """从 DARK_COLORS / LIGHT_COLORS 构建统一 token 表。
     复用已有 key 映射，未提供的 key 给出合理默认值。
     """
     return {
+        # UI-M1 semantic shell roles
+        "bg_app":             colors.get("bg", "#0F1115"),
+        "bg_surface":         colors.get("card_bg", "#171B21"),
+        "bg_surface_subtle":  colors.get("hover_bg", "#1E2430"),
+        "bg_selected":        colors.get("active_bg", "#1E2430"),
+        "border_default":     colors.get("border", "#272D38"),
+        "border_strong":      colors.get("border_light", "#303744"),
+        "text_primary":       colors.get("text_main", "#F5F7FA"),
+        "text_secondary":     colors.get("text_sub", "#A1A8B3"),
+        "text_muted":         colors.get("text_muted", "#727A88"),
+        "accent_primary":     colors.get("primary", "#5C9CFF"),
+        "accent_hover":       colors.get("primary_hover", "#7AAEFF"),
+
         # ── 背景层 ──
         "bg_primary":    colors.get("bg",              "#0B0E11"),
         "bg_secondary":  colors.get("card_bg",         "#14141A"),

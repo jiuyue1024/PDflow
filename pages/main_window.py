@@ -33,8 +33,8 @@ class Ui_MainWindow(object):
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.sidebar = QWidget(self.centralWidget)
         self.sidebar.setObjectName(u"sidebar")
-        self.sidebar.setMinimumSize(QSize(220, 0))
-        self.sidebar.setMaximumSize(QSize(220, 16777215))
+        self.sidebar.setMinimumSize(QSize(240, 0))
+        self.sidebar.setMaximumSize(QSize(240, 16777215))
         self.sidebarLayout = QVBoxLayout(self.sidebar)
         self.sidebarLayout.setSpacing(2)
         self.sidebarLayout.setObjectName(u"sidebarLayout")
@@ -134,6 +134,23 @@ class Ui_MainWindow(object):
         self.btnSpeedwrite_row.setVisible(False)
         self.btnTemplateLayout_row, self.btnTemplateLayout, self.btnTemplateLayout_ind = _make_nav_row(self.sidebarNav, "nav-template", "模板排版", "btnTemplateLayout")
 
+        # Shared shell grouping cues. Existing compatible destinations remain
+        # available; Home composition is intentionally deferred to UI-M2.
+        self.navSectionWorkspace = QLabel(self.sidebarNav)
+        self.navSectionWorkspace.setObjectName("navSectionLabel")
+        self.navSectionWorkspace.setContentsMargins(10, 12, 10, 4)
+        self.navSectionWorkspace.setText("工作区")
+        self.navSectionTools = QLabel(self.sidebarNav)
+        self.navSectionTools.setObjectName("navSectionLabel")
+        self.navSectionTools.setContentsMargins(10, 16, 10, 4)
+        self.navSectionTools.setText("工具")
+        self.navSectionTemplates = QLabel(self.sidebarNav)
+        self.navSectionTemplates.setObjectName("navSectionLabel")
+        self.navSectionTemplates.setContentsMargins(10, 16, 10, 4)
+        self.navSectionTemplates.setText("模板")
+        self.navLayout.insertWidget(0, self.navSectionWorkspace)
+        self.navLayout.insertWidget(2, self.navSectionTools)
+        self.navLayout.insertWidget(8, self.navSectionTemplates)
         self.sidebarLayout.addWidget(self.sidebarNav)
 
         # 底部 spacer
@@ -168,10 +185,19 @@ class Ui_MainWindow(object):
         self.contentLayout.setSpacing(0)
         self.contentLayout.setObjectName(u"contentLayout")
         self.contentLayout.setContentsMargins(0, 0, 0, 0)
+        self.topBar = QWidget(self.contentArea)
+        self.topBar.setObjectName("topBar")
+        self.topBar.setFixedHeight(56)
+        self.topBarLayout = QHBoxLayout(self.topBar)
+        self.topBarLayout.setContentsMargins(24, 0, 24, 0)
+        self.topBarLayout.setSpacing(0)
         self.contentTitle = QLabel(self.contentArea)
-        self.contentTitle.setObjectName(u"contentTitle")
+        self.contentTitle.setObjectName(u"topBarTitle")
+        self.contentTitle.setAccessibleName("Page context")
+        self.topBarLayout.addWidget(self.contentTitle)
+        self.topBarLayout.addStretch(1)
 
-        self.contentLayout.addWidget(self.contentTitle)
+        self.contentLayout.addWidget(self.topBar)
 
         self.pageContainer = QWidget(self.contentArea)
         self.pageContainer.setObjectName(u"pageContainer")
@@ -312,6 +338,9 @@ class Ui_MainWindow(object):
         self.btnSettings.setText(QCoreApplication.translate("MainWindow", u"\u8bbe\u7f6e", None))
         self.btnSettings.setObjectName(QCoreApplication.translate("MainWindow", u"navButton", None))
         self.contentTitle.setText(QCoreApplication.translate("MainWindow", u"\u9996\u9875", None))
+        self.navSectionWorkspace.setText(QCoreApplication.translate("MainWindow", "工作区", None))
+        self.navSectionTools.setText(QCoreApplication.translate("MainWindow", "工具", None))
+        self.navSectionTemplates.setText(QCoreApplication.translate("MainWindow", "模板", None))
         self.pageContainer.setStyleSheet("")
     # retranslateUi
 
